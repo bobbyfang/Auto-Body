@@ -1,0 +1,26 @@
+NO          vendor number//
+NAME        vendor name//
+MAS	        boss
+TEL         tele//
+TEL1	    mobile//
+FAX	        fax//
+ADDR	    address//
+PAYMENT     payment term
+EMAIL       email//
+BBC	        
+BTEL	    
+MONEY	    
+MONEY1	    
+MONEY2	    
+MONEY3	    
+CLOSEDAY	
+MEM1	    memo1
+MUCHMONEY	
+CONTI	    vendor name
+EASYNAME	?
+MEM2	    memo2
+MEM3	    memo3
+USRAND	    currency
+WABDATA	    ?
+C_NO	    
+CHINAME     chinese name?
