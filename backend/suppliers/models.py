@@ -14,6 +14,8 @@ class Supplier(models.Model):
     email = models.EmailField(default="", blank=True)
     address = models.TextField(default="", blank=True)
 
+    memo = models.TextField(default="", blank=True)
+
     def __str__(self):
         return str(self.name)
 
