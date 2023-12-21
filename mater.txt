@@ -1,0 +1,81 @@
+NO		item no
+OEM		oem no
+NAME		description
+NAME_E		gm item no
+FILL1		dunno
+FILL2		dunno
+PRO_TYPE	facelift?
+MODEL		model
+PRO_YEAR	year
+UNIT		unit
+KIND		level on system
+UT_PRIC1	A price?
+LASTDATE	last sale
+SAVE		safety qty
+PRO_RM		
+TYPE		//
+QTY		qty
+REALMONEY	landing cost
+STQTY		stock begin
+STPRI		//
+TOTL2O		?
+TOTL2P		last year sales
+COMPPRI		A price?
+FILLPRI		?
+ORDERQTY	ordered
+AW1		FOB
+AW2		//
+AW3		A price?
+AW4		item no?
+STORE		location
+ONSALE		//
+TWORDERNO	?
+SQUARE		measure?
+SHOWYN		?
+MEMO1		
+MEMO2		
+REALMONEY0	average cost
+FILLQTY		
+PROVMON	
+PROVNO	
+ACLASS		A price?
+SUPPLIERNO	supplier no
+MANUL		?
+LUPDATE		?
+LUPSTQTY	?
+MIT01		mit price
+MIT02		mit date
+GRD01		gr price
+GRD02		gr date
+TON01		st/wd price
+TON02		st/wd date
+EPH01		rr price
+EPH02		rr date
+INVQTY		in transit
+EXDAT		ETA
+SQ_MES		measure2?
+EPNO		
+PICPATH		path
+MAKE		make
+FPRICE		f price
+EPRICE		e price
+OLDAPNO		old no
+BOOKDATE	book date
+WHOBOOK		who book
+NO_DISC		no disc toggle
+F_PRIMARY	pri lamp
+F_SECONDRY	sec lamp
+NEW_PROD	new prod
+PICPATH1	car pic path
+DUTY		vat
+MATERIAL	?
+PIC_SEL		?
+LVMANUAL	level manual
+SQMANUAL	safety qty manual
+FOBMANUAL	fob manual
+LANDING		landing cost
+WEI_NET		weight net
+WEI_GROSS	weight gross
+CMPET501	other price
+CMPET502	other date
+NT_DOLL		

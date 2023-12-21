@@ -1,0 +1,77 @@
+NO		customer no//
+NAME		co name//
+MAS		?
+TEL		tel//
+FAX		fax//
+ADDR		addr//
+BILLADDR	bill addr//
+DISCOUNT	discount?
+CASHYN		
+BTEL		mobile//
+CLOSEDAY	close date
+MEM1		memo1//
+MEM2		memo2//
+MEM3		memo3//
+MEM4		memo4//
+ORDER		contact person//
+CONTACT		service sales//
+TOTUP		
+TOTNOW		
+TOTBILL		
+MONEY		
+MONEY1		
+MONEY2		
+MONEY3		
+TOTL2P		
+STAMP		
+EASYNAME	
+MUCHMONEY	
+AREA		
+CITY		
+MAKCREDIT	credit limit//
+STARTDATE	
+STATUS		
+EXPORT		export?
+PAYDAY		
+PAYCONT		
+CLASS		price level
+DATA_FILE	
+VATNUM		vat num//
+EPNO		sales per
+SETTLEMENT	?
+RELATIONX	?
+BILLADDR1	?
+EMAIL		email//
+WEBSITE		website
+ABNCK		abn ck num//
+DELIVAREA	del area
+FREIGHT		freight
+MAP		map
+APACCT		
+CUSTACCT	
+SUSPEND_	suspend//
+SUBURB1		cust suburb//
+SUBURB2		bill suburb//
+STATE1		cust state//
+STATE2		bill state//
+PCODE1		cust postal code//
+PCODE2		bill postal code//
+MEMOOUT1	freight memo 1
+MEMOOUT2	freight memo 2
+MEMOOUT3	freight memo 3
+ACCTCONT	account contact//
+ACCTTEL		account tel//
+DISC_		settlement disc?
+PRIMBUS1	primary bus
+PRIMBUS2	primary bus
+PRIMBUS3	primary bus
+LSTYY		month to date
+LSTYY_YTD	year to date
+LSTYY_CYTD	last year to date
+LAST_SALE	last sale
+LAST_PAY	last pay
+ORDERYN		
+BOOKDATE	
+CUST_COMP	
+BLOCK_DT	block date
+BLOCK_NA	block name
