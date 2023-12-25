@@ -1,21 +1,21 @@
-NO		item no
-OEM		oem no
-NAME		description
-NAME_E		gm item no
+NO		    item no//
+OEM		    oem no//
+NAME		description//
+NAME_E		gm item no//
 FILL1		dunno
 FILL2		dunno
-PRO_TYPE	facelift?
-MODEL		model
-PRO_YEAR	year
-UNIT		unit
+PRO_TYPE	facelift?//
+MODEL		model//
+PRO_YEAR	year//
+UNIT		unit//
 KIND		level on system
 UT_PRIC1	A price?
 LASTDATE	last sale
 SAVE		safety qty
 PRO_RM		
 TYPE		//
-QTY		qty
-REALMONEY	landing cost
+QTY		    qty//
+REALMONEY	landing cost//
 STQTY		stock begin
 STPRI		//
 TOTL2O		?
@@ -23,40 +23,40 @@ TOTL2P		last year sales
 COMPPRI		A price?
 FILLPRI		?
 ORDERQTY	ordered
-AW1		FOB
-AW2		//
-AW3		A price?
-AW4		item no?
-STORE		location
+AW1		    FOB//
+AW2		    //
+AW3		    A price?
+AW4		    item no?
+STORE		location//
 ONSALE		//
 TWORDERNO	?
 SQUARE		measure?
 SHOWYN		?
-MEMO1		
-MEMO2		
+MEMO1		memo1//
+MEMO2		memo2//
 REALMONEY0	average cost
 FILLQTY		
-PROVMON	
-PROVNO	
+PROVMON	    
+PROVNO	    
 ACLASS		A price?
-SUPPLIERNO	supplier no
+SUPPLIERNO	supplier no//
 MANUL		?
 LUPDATE		?
 LUPSTQTY	?
-MIT01		mit price
-MIT02		mit date
-GRD01		gr price
-GRD02		gr date
-TON01		st/wd price
-TON02		st/wd date
-EPH01		rr price
-EPH02		rr date
-INVQTY		in transit
-EXDAT		ETA
+MIT01		mit price//
+MIT02		mit date//
+GRD01		gr price//
+GRD02		gr date//
+TON01		st/wd price//
+TON02		st/wd date//
+EPH01		rr price//
+EPH02		rr date//
+INVQTY		in transit//
+EXDAT		ETA//
 SQ_MES		measure2?
-EPNO		
+EPNO		emp no
 PICPATH		path
-MAKE		make
+MAKE		make//
 FPRICE		f price
 EPRICE		e price
 OLDAPNO		old no
