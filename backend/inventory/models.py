@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 from suppliers.models import Supplier
 
-from common.utils.formatting import convertDateToReferenceHeader
+from common.utils.formatting import convertDateToReferenceHeader, lastRefVariable
 # Create your models here.
 
 
@@ -94,9 +94,10 @@ class InventoryQuote(models.Model):
     def save(self, *args, **kwargs):
         if not self.reference_number:
             today = datetime.today()
-            today_count = len(InventoryQuote.objects.filter(created__date=today))
+            # today_count = len(InventoryQuote.objects.filter(created__date=today))
+            last_ref_number = lastRefVariable(InventoryQuote)
             reference_header = convertDateToReferenceHeader(today)
-            self.reference_number = f'{reference_header}{today_count+1:03}'
+            self.reference_number = f'{reference_header}{last_ref_number+1:03}'
         super(InventoryQuote, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -104,12 +105,8 @@ class InventoryQuote(models.Model):
 
 
 class InventoryQuoteItem(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     inventory_quote = models.ForeignKey(InventoryQuote, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.product.product_number} ({self.inventory_quote.reference_number})'
-
-
-class InventoryQuoteItemPrice(models.Model):
-    inventory_quote_item = models.ForeignKey(InventoryQuoteItem, on_delete=models.CASCADE)
