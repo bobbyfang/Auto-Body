@@ -1,0 +1,43 @@
+NO	        ref no//
+DATE	    date//
+CNO	        customer no//
+EPNO	    emp no//
+MEMO_	    
+MEMMO	
+MNO	        item no//
+QTY	        qty//
+UI	        price//
+RMONEY	    
+YN	        
+INM	        
+BACKYN	
+TRUEM	
+TAX	
+TAXMONEY	
+OUTNAME	
+CUSTNAME	
+DIS_	
+DIS_MONEY	
+OVERTHIS	
+DELIVADDR	
+OUTNO	
+STORE	
+AREA	
+PRTTIME	
+PULLER	
+TIMEFSH	
+DELIVER	
+DELIMEMO	
+TIMESTRT	
+DEL_HOLD	
+SETT_DISC	
+FREIGHT	
+CUSTACCT	
+ROUNDING	
+FE_TOT_AMT	
+WHY_NOT	
+SEQ	
+QCNO	
+DVTIME	
+DRIV_NO	
+BACKTIME
