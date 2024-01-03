@@ -1,6 +1,8 @@
 from django.db import models
 # from django.contrib.auth.models import User
 
+from inventory.models import PriceLevel
+
 from phonenumber_field.modelfields import PhoneNumberField
 
 # Create your models here.
@@ -19,6 +21,9 @@ class Customer(models.Model):
     credit_limit = models.DecimalField(max_digits=16,
                                        default=1000.00,
                                        decimal_places=2)
+    customer_level = models.ForeignKey(PriceLevel,
+                                       on_delete=models.PROTECT,
+                                       default=PriceLevel.get_default_pk)
 
     vat_number = models.CharField(max_length=10,
                                   default="",
