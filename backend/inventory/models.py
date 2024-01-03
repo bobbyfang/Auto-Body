@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from suppliers.models import Supplier
 
 from common.utils.formatting import convertDateToReferenceHeader, lastRefVariable
+from common.abstract.models import ReferenceModel
 # Create your models here.
 
 
@@ -83,14 +84,7 @@ class ProductSupplierItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
 
 
-class InventoryQuote(models.Model):
-    reference_number = models.CharField(primary_key=True,
-                                        max_length=9,
-                                        default="",
-                                        editable=False)
-    created = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
-
+class InventoryQuote(ReferenceModel):
     def save(self, *args, **kwargs):
         if not self.reference_number:
             today = datetime.today()
@@ -110,3 +104,31 @@ class InventoryQuoteItem(models.Model):
 
     def __str__(self):
         return f'{self.product.product_number} ({self.inventory_quote.reference_number})'
+
+
+class PurchaseOrder(ReferenceModel):
+    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+
+    def save(self, *args, **kwargs):
+        if not self.reference_number:
+            today = datetime.today()
+            # today_count = len(InventoryQuote.objects.filter(created__date=today))
+            last_ref_number = lastRefVariable(PurchaseOrder)
+            reference_header = convertDateToReferenceHeader(today)
+            self.reference_number = f'{reference_header}{last_ref_number+1:03}'
+        super(PurchaseOrder, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.reference_number)
+
+
+class PurchaseOrderItem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    unit_cost = models.DecimalField(default=0.0,
+                                decimal_places=2,
+                                max_digits=16)
+    quantity = models.IntegerField(default=0)
+    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE)
+    subtotal = models.DecimalField(default=0.0,
+                                   decimal_places=2,
+                                   max_digits=16)

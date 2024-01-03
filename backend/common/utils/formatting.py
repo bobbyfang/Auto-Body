@@ -13,6 +13,6 @@ def lastRefVariable(model):
     if from_today:
         last_record = from_today.last()
         last_ref_num = int(last_record.reference_number[-3:])
-        return last_ref_num + 1
+        return last_ref_num
     else:
-        return 1
+        return 0
