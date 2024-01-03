@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from django.db import models
-from django.contrib.auth.models import User
 
 from suppliers.models import Supplier
 
@@ -50,6 +49,12 @@ class PriceLevel(models.Model):
     markdown_percentage = models.DecimalField(default=0.0,
                                               max_digits=5,
                                               decimal_places=2)
+
+    @classmethod
+    def get_default_pk(cls):
+        price_level, _ = cls.objects.get_or_create(level_name="A",
+                                                   defaults={"markdown_percentage": 0.0})
+        return price_level.pk
 
     def __str__(self):
         return str(self.level_name)
