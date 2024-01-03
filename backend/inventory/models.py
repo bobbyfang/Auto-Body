@@ -108,6 +108,8 @@ class InventoryQuoteItem(models.Model):
 
 class PurchaseOrder(ReferenceModel):
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+    invoice_number = models.CharField(max_length=64, default="")
+    memo = models.TextField(default="", blank=True)
 
     def save(self, *args, **kwargs):
         if not self.reference_number:
@@ -131,4 +133,9 @@ class PurchaseOrderItem(models.Model):
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE)
     subtotal = models.DecimalField(default=0.0,
                                    decimal_places=2,
-                                   max_digits=16)
+                                   max_digits=16,
+                                   editable=False)
+    total = models.DecimalField(default=0.0,
+                                decimal_places=2,
+                                max_digits=16,
+                                editable=False)

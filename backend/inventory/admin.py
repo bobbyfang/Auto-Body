@@ -43,6 +43,7 @@ class InventoryQuoteAdmin(admin.ModelAdmin):
 class PurchaseOrderItemInline(admin.StackedInline):
     model = PurchaseOrderItem
     extra = 0
+    readonly_fields = ["subtotal"]
 
 
 class PurchaseOrderAdmin(admin.ModelAdmin):
