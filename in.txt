@@ -1,0 +1,33 @@
+NO          ref no//
+DATE	    date//
+PNO         supplier no//
+INVNO	    inv no//
+MEMO	    memo//
+RATE	    exchange rate
+MNO	        item no//
+QTY	        qty//
+UI	        cost//
+RMONEY	    
+YN	        
+BACKYN	    
+TRUEM	    
+TAX	        
+TAXMONEY	
+OUTNAME	    
+INSURE	    
+CHARGE	    
+L_C	        
+ATTN	    
+TALK	    
+REASON	    
+RESULT	    
+SUPNO	    
+UPDQTY	    
+PAYIN	    
+DEFARATE	
+F_COMM	    
+COST_EXCHA	cost exchange rate
+SEA_FRE_R	
+ORDERQTY	
+EMPLNUM     empl num//
+COLL_QTY       
