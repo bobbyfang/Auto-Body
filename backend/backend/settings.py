@@ -39,11 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'phonenumber_field',
     'knox',
+    'rest_framework',
+    'corsheaders',
     'customers',
     'suppliers',
     'inventory',
     'sales',
-    'rest_framework',
     'authentication',
 ]
 
@@ -55,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -140,3 +142,7 @@ REST_KNOX = {
     'USER_SERIALIZER': 'knox.serializers.UserSerializer',
     'AUTO_REFRESH': True,
 }
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000'
+]
