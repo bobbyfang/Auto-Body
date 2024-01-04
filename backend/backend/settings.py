@@ -38,11 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'phonenumber_field',
+    'knox',
     'customers',
     'suppliers',
     'inventory',
     'sales',
     'rest_framework',
+    'authentication',
 ]
 
 MIDDLEWARE = [
@@ -129,3 +131,12 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 PHONENUMBER_DEFAULT_REGION = "ZA"
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
+}
+
+REST_KNOX = {
+    'USER_SERIALIZER': 'knox.serializers.UserSerializer',
+    'AUTO_REFRESH': True,
+}
