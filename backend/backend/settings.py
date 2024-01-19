@@ -141,8 +141,11 @@ REST_FRAMEWORK = {
 REST_KNOX = {
     'USER_SERIALIZER': 'knox.serializers.UserSerializer',
     'AUTO_REFRESH': True,
+    'AUTH_HEADER_PREFIX': "Bearer",
 }
 
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000'
 ]
+
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']

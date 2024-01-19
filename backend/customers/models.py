@@ -27,11 +27,11 @@ class Customer(models.Model):
 
     vat_number = models.CharField(max_length=10,
                                   default="",
-                                  name="VAT Number",
+                                  verbose_name="VAT Number",
                                   blank=True)
     company_key_number = models.CharField(max_length=32,
                                           default="",
-                                          name="CK Number",
+                                          verbose_name="CK Number",
                                           blank=True)
 
     shipping_instructions = models.TextField(default="", blank=True)
@@ -45,6 +45,7 @@ class Customer(models.Model):
 
 
 class ContactPerson(models.Model):
+    id = models.AutoField(primary_key=True)
     contact_name = models.CharField(max_length=128)
     role = models.CharField(max_length=128, blank=True, default="")
     phone_number = PhoneNumberField()
