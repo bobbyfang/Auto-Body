@@ -5,10 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "React: Typescript",
+            "request": "launch",
+            "type": "firefox",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/frontend/src",
+        },
+        {
             "name": "Python: Django",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}\\backend\\manage.py",
+            "program": "${workspaceFolder}/backend/manage.py",
             "args": [
                 "runserver"
             ],
