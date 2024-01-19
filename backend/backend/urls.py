@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/', include('customers.urls')),
     path('api/', include('suppliers.urls')),
+    path('api/', include('inventory.urls')),
     path('auth/', include('authentication.urls')),
     path('csrf_token/', csrf),
     path('auth/', include('authentication.urls')),

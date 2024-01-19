@@ -11,7 +11,7 @@ from customers.serializers import CustomerSerializer, ContactPersonSerializer
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
 

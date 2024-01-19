@@ -1,5 +1,5 @@
-import { Box, Button, ClickAwayListener, Divider, FormControl, MenuItem, SelectChangeEvent, Stack, TextField } from "@mui/material";
-import {Add, Save, KeyboardBackspace} from "@mui/icons-material";
+import { Box, Button, Divider, FormControl, MenuItem, SelectChangeEvent, Stack, TextField } from "@mui/material";
+import {Add, Save, KeyboardBackspace, Close} from "@mui/icons-material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import Alert from "../common/Alert";
@@ -9,6 +9,8 @@ export default function Customers () {
     const [customerList, setCustomerList] = useState([]);
     const [customerIndex, setCustomerIndex] = useState('');
     const [pastCustomer, setPastCustomer] = useState('');
+
+    const [priceLevelsList, setPriceLevelList] = useState([]);
 
     const [isAdd, setAdd] = useState(false);
     const [isAlertVisible, setAlertVisibility] = useState(false);
@@ -20,7 +22,19 @@ export default function Customers () {
             .then(res => {
                 setCustomerList(res.data);
             })
-            .catch(error => console.log(error))
+            .catch(error => {
+                setAlertMessage(`Could not retrieve the customers.`);
+                setSeverity("error");
+                setAlertVisibility(true);})
+    }, []);
+
+    useEffect(() => {
+        axios.get("http://localhost:8000/api/price_levels/")
+            .then(res => setPriceLevelList(res.data))
+            .catch(error => {
+                setAlertMessage(`Could not retrieve the price levels.`);
+                setSeverity("error");
+                setAlertVisibility(true);})
     }, []);
 
     useEffect(() => {
@@ -30,16 +44,26 @@ export default function Customers () {
     useEffect(() => {
         const timer = setTimeout(() => {
             setAlertVisibility(false);
-        }, 10000);
-
+        }, 5000);
+      
         return () => {
-            clearTimeout(timer);
+          clearTimeout(timer);
         };
-    }, []);
+      }, [isAlertVisible]);
 
-    const handleCustomerChange =  (event: SelectChangeEvent) => {
+    const handleCustomerChange = (event: SelectChangeEvent) => {
         event.preventDefault();
         setCustomerIndex(event.target.value);
+    };
+
+    const handlePriceLevelChange = async (event: SelectChangeEvent) => {
+        event.preventDefault();
+        setCustomerList((prevList: Array) => {
+            const updatedList = prevList.map((item: object, index) => {
+            return customerIndex === index ? { ...item, [event.target.name]: event.target.value } : item}
+            );
+            return updatedList;
+        });
     };
 
     const handleChange = async (event: any) => {
@@ -76,6 +100,14 @@ export default function Customers () {
         setAdd(false);
         setCustomerList(customerList.slice(0, -1));
         setCustomerIndex("");
+    }
+
+    const handleCancel = async (event: any) => {
+        event.preventDefault();
+        const updatedList = customerList.map((customer: any, index) => {
+            return customerIndex === index ? pastCustomer : customer;
+        });
+        setCustomerList(updatedList);
     }
 
     const handleSave = async (event: any) => {
@@ -115,9 +147,15 @@ export default function Customers () {
                     <Button
                         onClick={handleAdd}
                         disabled={fieldsDirty()}
-                        sx={{display: isAdd ? "none" : ""}}
+                        sx={{display: isAdd || fieldsDirty() ? "none" : ""}}
                     >
                         <Add />Add
+                    </Button>
+                    <Button
+                        onClick={handleCancel}
+                        sx={{display: fieldsDirty() && !isAdd ? "" : "none"}}
+                    >
+                        <Close />Cancel
                     </Button>
                     <Button
                         onClick={handleBack}
@@ -172,7 +210,7 @@ export default function Customers () {
                             label="Fax Number"
                             name="fax_number"
                             InputLabelProps={{shrink: true}}
-                            value={customerList[customerIndex]?.fax_number}
+                            value={customerList[customerIndex]?.fax_number || ""}
                             margin="normal"
                             onChange={handleChange} 
                             disabled={customerList[customerIndex] ? false : true} />
@@ -220,6 +258,23 @@ export default function Customers () {
                             margin="normal"
                             onChange={handleChange} 
                             disabled={customerList[customerIndex] ? false : true} />
+                        <Divider />
+                        <TextField value={customerList[customerIndex]?.customer_level} sx={{display: "none"}} />
+                        <TextField
+                            select
+                            value={`${customerList[customerIndex]?.customer_level}`}
+                            margin="normal"
+                            onChange={handlePriceLevelChange}
+                            InputLabelProps={{shrink: true}}
+                            label="Customer Level"
+                            name="customer_level"
+                            disabled={customerList[customerIndex] ? false : true}
+                        >
+                            {priceLevelsList?.map((priceLevel, index)=>(
+                                <MenuItem key={index} value={priceLevel.level_name}>
+                                    {priceLevel.level_name} - {parseFloat(priceLevel.markdown_percentage) > 0 ? `(${priceLevel.markdown_percentage})%` : "Original"}
+                                </MenuItem>))}
+                        </TextField>
                         <TextField 
                             label="Credit Limit"
                             name="credit_limit"
@@ -264,7 +319,7 @@ export default function Customers () {
                     <Stack sx={{
                         width: "48%",
                         textAlign: "center"}}>
-                        {customerList[customerIndex]?.contact_persons.map((person, index) => (
+                        {customerList[customerIndex]?.contact_persons?.map((person, index) => (
                             <>
                                 <Stack
                                     value={index}>
