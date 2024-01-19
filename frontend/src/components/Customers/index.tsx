@@ -1,14 +1,36 @@
-import { Box, Button, Divider, FormControl, MenuItem, SelectChangeEvent, Stack, TextField } from "@mui/material";
+import { Box, Button, Divider, FormControl, MenuItem, Stack, TextField } from "@mui/material";
 import {Add, Save, KeyboardBackspace, Close} from "@mui/icons-material";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import Alert from "../common/Alert";
 import _ from 'lodash';
 
+export class Customer {    
+    name?: string; 
+    telephone_number?: string;
+    fax_number?: string;
+    mobile_number?: string;
+    physical_address?: string;
+    billing_address?: string;
+    vat_number?: string;
+    company_key_number?: string;
+    credit_limit?: string;
+    suspend_date?: string;
+    shipping_instructions?: string;
+    memo?: string;
+    customer_level?: string;
+    contact_persons?: [];
+}
+
+export interface PriceLevel {
+    level_name: string;
+    markdown_percentage: string;
+}
+
 export default function Customers () {
-    const [customerList, setCustomerList] = useState([]);
-    const [customerIndex, setCustomerIndex] = useState('');
-    const [pastCustomer, setPastCustomer] = useState('');
+    const [customerList, setCustomerList] = useState<Customer[]>([]);
+    const [customerIndex, setCustomerIndex] = useState<any>('');
+    const [pastCustomer, setPastCustomer] = useState<Customer>('');
 
     const [priceLevelsList, setPriceLevelList] = useState([]);
 
@@ -22,7 +44,7 @@ export default function Customers () {
             .then(res => {
                 setCustomerList(res.data);
             })
-            .catch(error => {
+            .catch(() => {
                 setAlertMessage(`Could not retrieve the customers.`);
                 setSeverity("error");
                 setAlertVisibility(true);})
@@ -31,7 +53,7 @@ export default function Customers () {
     useEffect(() => {
         axios.get("http://localhost:8000/api/price_levels/")
             .then(res => setPriceLevelList(res.data))
-            .catch(error => {
+            .catch(() => {
                 setAlertMessage(`Could not retrieve the price levels.`);
                 setSeverity("error");
                 setAlertVisibility(true);})
@@ -51,14 +73,12 @@ export default function Customers () {
         };
       }, [isAlertVisible]);
 
-    const handleCustomerChange = (event: SelectChangeEvent) => {
-        event.preventDefault();
+    const handleCustomerChange = (event: ChangeEvent<HTMLInputElement>) => {
         setCustomerIndex(event.target.value);
     };
 
-    const handlePriceLevelChange = async (event: SelectChangeEvent) => {
-        event.preventDefault();
-        setCustomerList((prevList: Array) => {
+    const handlePriceLevelChange = async (event: ChangeEvent<HTMLInputElement>) => {
+        setCustomerList((prevList: Array<Customer>) => {
             const updatedList = prevList.map((item: object, index) => {
             return customerIndex === index ? { ...item, [event.target.name]: event.target.value } : item}
             );
@@ -68,7 +88,7 @@ export default function Customers () {
 
     const handleChange = async (event: any) => {
         event.preventDefault();
-        setCustomerList((prevList: Array) => {
+        setCustomerList((prevList: Array<Customer>) => {
             const updatedList = prevList.map((item: object, index) => {
             return customerIndex === index ? { ...item, [event.target.name]: event.target.value } : item}
             );
@@ -79,19 +99,7 @@ export default function Customers () {
     const handleAdd = async (event: any) => {
         event.preventDefault();
         setAdd(true);
-        setCustomerList([...customerList, {
-            "name": "",
-            "telephone_number": "",
-            "fax_number": "",
-            "mobile_number": "",
-            "physical_address": "",
-            "billing_address": "",
-            "vat_number": "",
-            "company_key_number": "",
-            "credit_limit": "",
-            "suspend_date": "",
-            "shipping_instructions": "",
-            "memo": "",}]);
+        setCustomerList([...customerList, new Customer()]);
         setCustomerIndex(customerList.length);
     }
 
@@ -254,7 +262,7 @@ export default function Customers () {
                             label="CK Number"
                             name="ck_number"
                             InputLabelProps={{shrink: true}}
-                            value={customerList[customerIndex]?.ck_number}
+                            value={customerList[customerIndex]?.company_key_number}
                             margin="normal"
                             onChange={handleChange} 
                             disabled={customerList[customerIndex] ? false : true} />
@@ -270,7 +278,7 @@ export default function Customers () {
                             name="customer_level"
                             disabled={customerList[customerIndex] ? false : true}
                         >
-                            {priceLevelsList?.map((priceLevel, index)=>(
+                            {priceLevelsList?.map((priceLevel: PriceLevel, index)=>(
                                 <MenuItem key={index} value={priceLevel.level_name}>
                                     {priceLevel.level_name} - {parseFloat(priceLevel.markdown_percentage) > 0 ? `(${priceLevel.markdown_percentage})%` : "Original"}
                                 </MenuItem>))}
@@ -319,10 +327,9 @@ export default function Customers () {
                     <Stack sx={{
                         width: "48%",
                         textAlign: "center"}}>
-                        {customerList[customerIndex]?.contact_persons?.map((person, index) => (
+                        {customerList[customerIndex]?.contact_persons?.map((person: {contact_name: string, role: string}, index) => (
                             <>
-                                <Stack
-                                    value={index}>
+                                <Stack>
                                     <TextField
                                         InputLabelProps={{shrink: true}}
                                         key={"contact_name" + index}
@@ -352,7 +359,7 @@ export default function Customers () {
                     </Stack>
                 </Stack>                
             </Box>
-            {isAlertVisible && <Alert message={alertMessage} severity={severity} onClick={(event) => setAlertVisibility(false)}/>}
+            {isAlertVisible && <Alert message={alertMessage} severity={severity} onClick={() => setAlertVisibility(false)}/>}
         </>
     );
 }
