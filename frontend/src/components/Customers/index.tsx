@@ -2,8 +2,8 @@ import { Box, Button, Divider, FormControl, MenuItem, Stack, TextField } from "@
 import {Add, Save, KeyboardBackspace, Close} from "@mui/icons-material";
 import axios from "axios";
 import { ChangeEvent, useEffect, useState } from "react";
-import Alert from "../common/Alert";
 import _ from 'lodash';
+import Content from "../Content";
 
 export class Customer {    
     name?: string; 
@@ -63,16 +63,6 @@ export default function Customers () {
         setPastCustomer(customerList[customerIndex]);
     }, [customerIndex]);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setAlertVisibility(false);
-        }, 5000);
-      
-        return () => {
-          clearTimeout(timer);
-        };
-      }, [isAlertVisible]);
-
     const handleCustomerChange = (event: ChangeEvent<HTMLInputElement>) => {
         setCustomerIndex(event.target.value);
     };
@@ -126,13 +116,13 @@ export default function Customers () {
         axios.post("http://localhost:8000/api/update_customer/",
                     customerList[customerIndex],
                     {headers: {"X-CSRFToken": csrfToken}})
-                    .then((response) => {
+                    .then(() => {
                         setPastCustomer(customerList[customerIndex]);
                         setAlertMessage(`Successfully saved or updated ${customerList[customerIndex].name}.`);
                         setSeverity("success");
                         setAlertVisibility(true);
                     })
-                    .catch((error) => {
+                    .catch(() => {
                         setAlertMessage(`Could not save or update ${customerList[customerIndex].name}.`);
                         setSeverity("error");
                         setAlertVisibility(true);
@@ -145,9 +135,12 @@ export default function Customers () {
 
     return (
         <>
-            <Box sx={{
-                backgroundColor: "white",
-                padding: "20px",}}>
+            <Content
+                isAlertVisible={isAlertVisible}
+                setAlertVisibility={setAlertVisibility}
+                alertMessage={alertMessage}
+                severity={severity}
+            >
                 <Stack 
                     direction="row"
                     justifyContent="space-between"
@@ -357,9 +350,8 @@ export default function Customers () {
                             Add Contact Person
                         </Button>
                     </Stack>
-                </Stack>                
-            </Box>
-            {isAlertVisible && <Alert message={alertMessage} severity={severity} onClick={() => setAlertVisibility(false)}/>}
+                </Stack>
+            </Content>
         </>
     );
 }
