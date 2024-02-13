@@ -1,10 +1,10 @@
 import { Outlet } from "react-router-dom";
 import Header from "../../components/Header";
 import { Box } from "@mui/material";
-import { drawerItems } from "../../components/SideDrawer/drawer-items";
 import { useState } from "react";
 import SideDrawer from "../../components/SideDrawer";
 import Customers from "../../components/Customers";
+import Products from "../../components/Products";
 
 interface Props {
     token: string,
@@ -34,6 +34,8 @@ export default function DashboardLayout( {token, setToken}: Props ) {
                 return (<h1>Invoices</h1>);
             case "Customers":
                 return (<Customers />);
+            case "Products":
+                return (<Products />);
             default:
                 return (<h1>Empty</h1>)
         }
@@ -46,8 +48,7 @@ export default function DashboardLayout( {token, setToken}: Props ) {
                 setToken={setToken}
                 drawerOpen={drawerOpen}
                 handleDrawerOpen={handleDrawerOpen} 
-                app={app}
-                setApp={setApp} />
+                app={app} />
             <SideDrawer
                 drawerOpen={drawerOpen}
                 handleDrawerClose={handleDrawerClose} 
@@ -61,7 +62,6 @@ export default function DashboardLayout( {token, setToken}: Props ) {
                 height: "auto",
                 width: "auto",
                 padding: "20px",
-                // backgroundColor: "white",
             }}>
                 {content(app)}
             </Box>

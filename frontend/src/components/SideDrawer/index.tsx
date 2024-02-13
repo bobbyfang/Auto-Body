@@ -75,6 +75,7 @@ export default function SideDrawer( { drawerOpen, handleDrawerClose, setApp }: P
             <Divider />
             <List>
                 <SideDrawerItem text="Customers" drawerOpen={drawerOpen} setApp={setApp}/>
+                <SideDrawerItem text="Products" drawerOpen={drawerOpen} setApp={setApp}/>
             </List>
         </Drawer>
     );
