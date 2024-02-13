@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from suppliers.models import Supplier
 
@@ -35,7 +37,7 @@ class Product(models.Model):
                                        decimal_places=2,
                                        max_digits=16)
 
-    manual_prices = models.BooleanField
+    manual_price = models.BooleanField(default=False)
     discountable = models.BooleanField(default=False)
     memo = models.TextField(default="", blank=True)
     inactive = models.BooleanField(default=False)
@@ -61,7 +63,9 @@ class PriceLevel(models.Model):
 
 
 class ProductPrice(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product,
+                                on_delete=models.CASCADE,
+                                related_name='prices')
     level = models.ForeignKey(PriceLevel, on_delete=models.PROTECT)
     price = models.DecimalField(default=0.0,
                                 max_digits=16,
@@ -73,7 +77,18 @@ class ProductPrice(models.Model):
         )]
 
     def __str__(self):
-        return str(self.level.level_name)
+        return str(f"{self.product.product_number} {self.level.level_name} Price (R{self.price})")
+
+
+@receiver(post_save, sender=Product)   
+def create_product_prices(sender, instance, created, **kwargs):
+    if created:
+        price_levels = PriceLevel.objects.all()
+        for price_level in price_levels:
+            ProductPrice.objects.create(
+                product=instance,
+                level=price_level,
+                price=(1 if instance.manual_price else (100 - price_level.markdown_percentage)) * instance.retail_price)
 
 
 class ProductLocation(models.Model):
