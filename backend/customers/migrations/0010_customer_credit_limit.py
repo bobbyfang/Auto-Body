@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0009_contactperson_role_alter_contactperson_email'),
+        ("customers", "0009_contactperson_role_alter_contactperson_email"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='customer',
-            name='credit_limit',
+            model_name="customer",
+            name="credit_limit",
             field=models.DecimalField(decimal_places=2, default=1000.0, max_digits=16),
         ),
     ]

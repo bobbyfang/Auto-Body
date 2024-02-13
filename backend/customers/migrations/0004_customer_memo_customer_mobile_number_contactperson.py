@@ -6,31 +6,51 @@ import phonenumber_field.modelfields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0003_customer_billing_address_customer_physical_address'),
+        ("customers", "0003_customer_billing_address_customer_physical_address"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='customer',
-            name='memo',
-            field=models.TextField(default=''),
+            model_name="customer",
+            name="memo",
+            field=models.TextField(default=""),
         ),
         migrations.AddField(
-            model_name='customer',
-            name='mobile_number',
-            field=phonenumber_field.modelfields.PhoneNumberField(default='', max_length=128, region=None),
+            model_name="customer",
+            name="mobile_number",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                default="", max_length=128, region=None
+            ),
             preserve_default=False,
         ),
         migrations.CreateModel(
-            name='ContactPerson',
+            name="ContactPerson",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('contact_name', models.TextField(max_length=128)),
-                ('phone_number', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None)),
-                ('email', models.EmailField(max_length=254)),
-                ('customer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='customers.customer')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("contact_name", models.TextField(max_length=128)),
+                (
+                    "phone_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        max_length=128, region=None
+                    ),
+                ),
+                ("email", models.EmailField(max_length=254)),
+                (
+                    "customer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="customers.customer",
+                    ),
+                ),
             ],
         ),
     ]

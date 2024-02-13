@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('suppliers', '0001_initial'),
+        ("suppliers", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='supplier',
-            name='memo',
-            field=models.TextField(blank=True, default=''),
+            model_name="supplier",
+            name="memo",
+            field=models.TextField(blank=True, default=""),
         ),
     ]

@@ -5,20 +5,23 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('inventory', '0016_purchaseorder_invoice_number_purchaseorder_memo'),
+        ("inventory", "0016_purchaseorder_invoice_number_purchaseorder_memo"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='product',
-            name='manual_prices',
+            model_name="product",
+            name="manual_prices",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='productprice',
-            name='product',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='prices', to='inventory.product'),
+            model_name="productprice",
+            name="product",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="prices",
+                to="inventory.product",
+            ),
         ),
     ]

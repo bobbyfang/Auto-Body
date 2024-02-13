@@ -18,21 +18,17 @@ class Customer(models.Model):
     physical_address = models.TextField(default="", blank=True)
     billing_address = models.TextField(default="", blank=True)
 
-    credit_limit = models.DecimalField(max_digits=16,
-                                       default=1000.00,
-                                       decimal_places=2)
-    customer_level = models.ForeignKey(PriceLevel,
-                                       on_delete=models.PROTECT,
-                                       default=PriceLevel.get_default_pk)
+    credit_limit = models.DecimalField(max_digits=16, default=1000.00, decimal_places=2)
+    customer_level = models.ForeignKey(
+        PriceLevel, on_delete=models.PROTECT, default=PriceLevel.get_default_pk
+    )
 
-    vat_number = models.CharField(max_length=10,
-                                  default="",
-                                  verbose_name="VAT Number",
-                                  blank=True)
-    company_key_number = models.CharField(max_length=32,
-                                          default="",
-                                          verbose_name="CK Number",
-                                          blank=True)
+    vat_number = models.CharField(
+        max_length=10, default="", verbose_name="VAT Number", blank=True
+    )
+    company_key_number = models.CharField(
+        max_length=32, default="", verbose_name="CK Number", blank=True
+    )
 
     shipping_instructions = models.TextField(default="", blank=True)
     memo = models.TextField(default="", blank=True)
@@ -50,9 +46,9 @@ class ContactPerson(models.Model):
     role = models.CharField(max_length=128, blank=True, default="")
     phone_number = PhoneNumberField()
     email = models.EmailField(blank=True, default="")
-    customer = models.ForeignKey(Customer,
-                                 on_delete=models.CASCADE,
-                                 related_name='contact_persons')
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name="contact_persons"
+    )
 
     def __str__(self):
         return str(self.contact_name)

@@ -5,20 +5,23 @@ import phonenumber_field.modelfields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0006_alter_contactperson_contact_name'),
+        ("customers", "0006_alter_contactperson_contact_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='customer',
-            name='fax_number',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, default='', max_length=128, region=None),
+            model_name="customer",
+            name="fax_number",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True, default="", max_length=128, region=None
+            ),
         ),
         migrations.AlterField(
-            model_name='customer',
-            name='mobile_number',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, default='', max_length=128, region=None),
+            model_name="customer",
+            name="mobile_number",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True, default="", max_length=128, region=None
+            ),
         ),
     ]

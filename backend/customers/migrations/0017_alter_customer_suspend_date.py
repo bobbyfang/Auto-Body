@@ -5,15 +5,14 @@ import django.utils.timezone
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0016_customer_suspend_date'),
+        ("customers", "0016_customer_suspend_date"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='customer',
-            name='suspend_date',
+            model_name="customer",
+            name="suspend_date",
             field=models.DateField(default=django.utils.timezone.now),
         ),
     ]

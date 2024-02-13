@@ -4,20 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('inventory', '0004_alter_inventoryquoteitem_reference_number'),
+        ("inventory", "0004_alter_inventoryquoteitem_reference_number"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='inventoryquoteitem',
-            old_name='reference_number',
-            new_name='inventory_quote',
+            model_name="inventoryquoteitem",
+            old_name="reference_number",
+            new_name="inventory_quote",
         ),
         migrations.AlterField(
-            model_name='inventoryquote',
-            name='reference_number',
-            field=models.CharField(default='', editable=False, max_length=9, primary_key=True, serialize=False),
+            model_name="inventoryquote",
+            name="reference_number",
+            field=models.CharField(
+                default="",
+                editable=False,
+                max_length=9,
+                primary_key=True,
+                serialize=False,
+            ),
         ),
     ]

@@ -5,20 +5,31 @@ import phonenumber_field.modelfields
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Customer',
+            name="Customer",
             fields=[
-                ('customer_number', models.CharField(max_length=128, primary_key=True, serialize=False)),
-                ('customer_name', models.CharField(max_length=128)),
-                ('customer_telephone_number', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None)),
-                ('customer_fax_number', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None)),
+                (
+                    "customer_number",
+                    models.CharField(max_length=128, primary_key=True, serialize=False),
+                ),
+                ("customer_name", models.CharField(max_length=128)),
+                (
+                    "customer_telephone_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        max_length=128, region=None
+                    ),
+                ),
+                (
+                    "customer_fax_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        max_length=128, region=None
+                    ),
+                ),
             ],
         ),
     ]

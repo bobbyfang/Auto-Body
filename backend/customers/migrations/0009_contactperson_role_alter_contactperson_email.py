@@ -4,20 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0008_alter_customer_billing_address_alter_customer_memo_and_more'),
+        (
+            "customers",
+            "0008_alter_customer_billing_address_alter_customer_memo_and_more",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contactperson',
-            name='role',
-            field=models.CharField(blank=True, default='', max_length=128),
+            model_name="contactperson",
+            name="role",
+            field=models.CharField(blank=True, default="", max_length=128),
         ),
         migrations.AlterField(
-            model_name='contactperson',
-            name='email',
-            field=models.EmailField(blank=True, default='', max_length=254),
+            model_name="contactperson",
+            name="email",
+            field=models.EmailField(blank=True, default="", max_length=254),
         ),
     ]

@@ -6,37 +6,72 @@ import phonenumber_field.modelfields
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Supplier',
+            name="Supplier",
             fields=[
-                ('supplier_number', models.CharField(max_length=128, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=128)),
-                ('telephone_number', phonenumber_field.modelfields.PhoneNumberField(default='', max_length=128, region=None)),
-                ('fax_number', phonenumber_field.modelfields.PhoneNumberField(blank=True, default='', max_length=128, region=None)),
-                ('mobile_number', phonenumber_field.modelfields.PhoneNumberField(blank=True, default='', max_length=128, region=None)),
-                ('email', models.EmailField(blank=True, default='', max_length=254)),
-                ('address', models.TextField(blank=True, default='')),
+                (
+                    "supplier_number",
+                    models.CharField(max_length=128, primary_key=True, serialize=False),
+                ),
+                ("name", models.CharField(max_length=128)),
+                (
+                    "telephone_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        default="", max_length=128, region=None
+                    ),
+                ),
+                (
+                    "fax_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        blank=True, default="", max_length=128, region=None
+                    ),
+                ),
+                (
+                    "mobile_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        blank=True, default="", max_length=128, region=None
+                    ),
+                ),
+                ("email", models.EmailField(blank=True, default="", max_length=254)),
+                ("address", models.TextField(blank=True, default="")),
             ],
         ),
         migrations.CreateModel(
-            name='SupplierContactPerson',
+            name="SupplierContactPerson",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('contact_name', models.CharField(max_length=128)),
-                ('role', models.CharField(blank=True, default='', max_length=128)),
-                ('phone_number', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None)),
-                ('email', models.EmailField(blank=True, default='', max_length=254)),
-                ('customer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='suppliers.supplier')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("contact_name", models.CharField(max_length=128)),
+                ("role", models.CharField(blank=True, default="", max_length=128)),
+                (
+                    "phone_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        max_length=128, region=None
+                    ),
+                ),
+                ("email", models.EmailField(blank=True, default="", max_length=254)),
+                (
+                    "customer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="suppliers.supplier",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'contact person',
+                "verbose_name": "contact person",
             },
         ),
     ]

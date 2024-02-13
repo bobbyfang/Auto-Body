@@ -4,34 +4,33 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0018_alter_customer_suspend_date'),
+        ("customers", "0018_alter_customer_suspend_date"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='customer',
-            name='active',
+            model_name="customer",
+            name="active",
         ),
         migrations.AddField(
-            model_name='customer',
-            name='suspend',
+            model_name="customer",
+            name="suspend",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='customer',
-            name='CK Number',
-            field=models.CharField(blank=True, default='', max_length=32),
+            model_name="customer",
+            name="CK Number",
+            field=models.CharField(blank=True, default="", max_length=32),
         ),
         migrations.AlterField(
-            model_name='customer',
-            name='VAT Number',
-            field=models.CharField(blank=True, default='', max_length=10),
+            model_name="customer",
+            name="VAT Number",
+            field=models.CharField(blank=True, default="", max_length=10),
         ),
         migrations.AlterField(
-            model_name='customer',
-            name='suspend_date',
+            model_name="customer",
+            name="suspend_date",
             field=models.DateField(blank=True, default=None, null=True),
         ),
     ]

@@ -22,10 +22,10 @@ class ContactPersonViewSet(viewsets.ModelViewSet):
     serializer_class = ContactPersonSerializer
 
 
-@api_view(('POST',))
+@api_view(("POST",))
 def update_customer(request):
     # return Response(status=status.HTTP_400_BAD_REQUEST)
-    if request.method == 'POST':
+    if request.method == "POST":
         customer_number = request.data.get("customer_number")
         customer = Customer.objects.get(pk=customer_number)
         serializer = CustomerSerializer(customer, data=request.data)

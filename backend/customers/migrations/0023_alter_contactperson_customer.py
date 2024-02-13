@@ -5,15 +5,18 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0022_rename_customer_number_contactperson_customer'),
+        ("customers", "0022_rename_customer_number_contactperson_customer"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contactperson',
-            name='customer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='contact_persons', to='customers.customer'),
+            model_name="contactperson",
+            name="customer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="contact_persons",
+                to="customers.customer",
+            ),
         ),
     ]

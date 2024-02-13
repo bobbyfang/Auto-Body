@@ -13,14 +13,12 @@ from common.abstract.models import ReferenceModel
 class Quotation(ReferenceModel):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
-    total = models.DecimalField(default=0.0,
-                                decimal_places=2,
-                                max_digits=16,
-                                editable=False)
-    vat = models.DecimalField(default=0.0,
-                              decimal_places=2,
-                              max_digits=16,
-                              editable=False)
+    total = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    vat = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
     memo = models.TextField(default="", blank=True)
 
     def save(self, *args, **kwargs):
@@ -28,7 +26,7 @@ class Quotation(ReferenceModel):
             today = datetime.today()
             last_ref_number = lastRefVariable(Quotation)
             reference_header = convertDateToReferenceHeader(today)
-            self.reference_number = f'{reference_header}{last_ref_number+1:03}'
+            self.reference_number = f"{reference_header}{last_ref_number+1:03}"
         super(Quotation, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -39,31 +37,26 @@ class QuotationItem(models.Model):
     quotation = models.ForeignKey(Quotation, on_delete=models.CASCADE)
 
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    price = models.DecimalField(default=0.0,
-                                decimal_places=2,
-                                max_digits=16,
-                                editable=False)
-    vat = models.DecimalField(default=0.0,
-                              decimal_places=2,
-                              max_digits=16,
-                              editable=False)
-    subtotal = models.DecimalField(default=0.0,
-                                   decimal_places=2,
-                                   max_digits=16,
-                                   editable=False)
+    price = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    vat = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    subtotal = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
 
 
 class Order(ReferenceModel):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
-    total = models.DecimalField(default=0.0,
-                                decimal_places=2,
-                                max_digits=16,
-                                editable=False)
-    vat = models.DecimalField(default=0.0,
-                              decimal_places=2,
-                              max_digits=16,
-                              editable=False)
+    total = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    vat = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
     memo = models.TextField(default="", blank=True)
 
     def save(self, *args, **kwargs):
@@ -71,7 +64,7 @@ class Order(ReferenceModel):
             today = datetime.today()
             last_ref_number = lastRefVariable(Order)
             reference_header = convertDateToReferenceHeader(today)
-            self.reference_number = f'{reference_header}{last_ref_number+1:03}'
+            self.reference_number = f"{reference_header}{last_ref_number+1:03}"
         super(Order, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -82,31 +75,26 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
 
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    price = models.DecimalField(default=0.0,
-                                decimal_places=2,
-                                max_digits=16,
-                                editable=False)
-    vat = models.DecimalField(default=0.0,
-                              decimal_places=2,
-                              max_digits=16,
-                              editable=False)
-    subtotal = models.DecimalField(default=0.0,
-                                   decimal_places=2,
-                                   max_digits=16,
-                                   editable=False)
+    price = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    vat = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    subtotal = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
 
 
 class Invoice(ReferenceModel):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
-    total = models.DecimalField(default=0.0,
-                                decimal_places=2,
-                                max_digits=16,
-                                editable=False)
-    vat = models.DecimalField(default=0.0,
-                              decimal_places=2,
-                              max_digits=16,
-                              editable=False)
+    total = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    vat = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
     memo = models.TextField(default="", blank=True)
 
     def save(self, *args, **kwargs):
@@ -114,7 +102,7 @@ class Invoice(ReferenceModel):
             today = datetime.today()
             last_ref_number = lastRefVariable(Invoice)
             reference_header = convertDateToReferenceHeader(today)
-            self.reference_number = f'{reference_header}{last_ref_number+1:03}'
+            self.reference_number = f"{reference_header}{last_ref_number+1:03}"
         super(Invoice, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -125,15 +113,12 @@ class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
 
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    price = models.DecimalField(default=0.0,
-                                decimal_places=2,
-                                max_digits=16,
-                                editable=False)
-    vat = models.DecimalField(default=0.0,
-                              decimal_places=2,
-                              max_digits=16,
-                              editable=False)
-    subtotal = models.DecimalField(default=0.0,
-                                   decimal_places=2,
-                                   max_digits=16,
-                                   editable=False)
+    price = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    vat = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    subtotal = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )

@@ -18,13 +18,17 @@ class Supplier(models.Model):
     memo = models.TextField(default="", blank=True)
 
     class Meta:
-        ordering = ['supplier_number']
+        ordering = ["supplier_number"]
 
     @classmethod
     def get_default_pk(cls):
-        supplier, _ = cls.objects.get_or_create(supplier_number="001",
-                                                defaults={"name": " ",
-                                                          "telephone_number": PhoneNumber.from_string("+27000000000")})
+        supplier, _ = cls.objects.get_or_create(
+            supplier_number="001",
+            defaults={
+                "name": " ",
+                "telephone_number": PhoneNumber.from_string("+27000000000"),
+            },
+        )
         return supplier
 
     def __str__(self):
@@ -36,10 +40,12 @@ class SupplierContactPerson(models.Model):
     role = models.CharField(max_length=128, blank=True, default="")
     phone_number = PhoneNumberField()
     email = models.EmailField(blank=True, default="")
-    supplier = models.ForeignKey(Supplier,
-                                 on_delete=models.CASCADE,
-                                 related_name="contact_persons",
-                                 default=Supplier.get_default_pk)
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.CASCADE,
+        related_name="contact_persons",
+        default=Supplier.get_default_pk,
+    )
 
     class Meta:
         verbose_name = "contact person"

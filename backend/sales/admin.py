@@ -1,7 +1,14 @@
 from django.contrib import admin
 
 
-from sales.models import Invoice, InvoiceItem, Order, OrderItem, Quotation, QuotationItem
+from sales.models import (
+    Invoice,
+    InvoiceItem,
+    Order,
+    OrderItem,
+    Quotation,
+    QuotationItem,
+)
 # Register your models here.
 
 
@@ -13,7 +20,9 @@ class InvoiceItemInline(admin.StackedInline):
 
 
 class InvoiceAdmin(admin.ModelAdmin):
-    inlines = [InvoiceItemInline,]
+    inlines = [
+        InvoiceItemInline,
+    ]
 
 
 class OrderItemInline(admin.StackedInline):
@@ -24,7 +33,9 @@ class OrderItemInline(admin.StackedInline):
 
 
 class OrderAdmin(admin.ModelAdmin):
-    inlines = [OrderItemInline,]
+    inlines = [
+        OrderItemInline,
+    ]
 
 
 class QuotationItemInline(admin.StackedInline):
@@ -35,7 +46,9 @@ class QuotationItemInline(admin.StackedInline):
 
 
 class QuotationAdmin(admin.ModelAdmin):
-    inlines = [QuotationItemInline,]
+    inlines = [
+        QuotationItemInline,
+    ]
 
 
 admin.site.register(Invoice, InvoiceAdmin)

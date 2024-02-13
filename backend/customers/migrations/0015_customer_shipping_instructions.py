@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0014_customer_active'),
+        ("customers", "0014_customer_active"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='customer',
-            name='shipping_instructions',
-            field=models.TextField(blank=True, default=''),
+            model_name="customer",
+            name="shipping_instructions",
+            field=models.TextField(blank=True, default=""),
         ),
     ]

@@ -4,7 +4,11 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from inventory.models import PriceLevel, Product, ProductPrice
-from inventory.serializers import PriceLevelSerializer, ProductSerializer, ProductPriceSerializer
+from inventory.serializers import (
+    PriceLevelSerializer,
+    ProductSerializer,
+    ProductPriceSerializer,
+)
 
 
 # Create your views here.

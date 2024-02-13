@@ -6,7 +6,7 @@ from rest_framework import serializers
 class SupplierContactPersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupplierContactPerson
-        fields = '__all__'
+        fields = "__all__"
 
 
 class SupplierSerializer(serializers.ModelSerializer):
@@ -14,12 +14,14 @@ class SupplierSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Supplier
-        fields = ["supplier_number",
-                  "name",
-                  "telephone_number",
-                  "fax_number",
-                  "mobile_number",
-                  "email",
-                  "address",
-                  "memo",
-                  "contact_persons"]
+        fields = [
+            "supplier_number",
+            "name",
+            "telephone_number",
+            "fax_number",
+            "mobile_number",
+            "email",
+            "address",
+            "memo",
+            "contact_persons",
+        ]

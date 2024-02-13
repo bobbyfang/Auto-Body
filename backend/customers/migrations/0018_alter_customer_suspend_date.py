@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0017_alter_customer_suspend_date'),
+        ("customers", "0017_alter_customer_suspend_date"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='customer',
-            name='suspend_date',
+            model_name="customer",
+            name="suspend_date",
             field=models.DateField(default=None, null=True),
         ),
     ]

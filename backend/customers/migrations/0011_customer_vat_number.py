@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0010_customer_credit_limit'),
+        ("customers", "0010_customer_credit_limit"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='customer',
-            name='VAT Number',
-            field=models.CharField(default='', max_length=10),
+            model_name="customer",
+            name="VAT Number",
+            field=models.CharField(default="", max_length=10),
         ),
     ]

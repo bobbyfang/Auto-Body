@@ -6,16 +6,19 @@ import inventory.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('inventory', '0016_purchaseorder_invoice_number_purchaseorder_memo'),
-        ('customers', '0019_remove_customer_active_customer_suspend_and_more'),
+        ("inventory", "0016_purchaseorder_invoice_number_purchaseorder_memo"),
+        ("customers", "0019_remove_customer_active_customer_suspend_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='customer',
-            name='customer_level',
-            field=models.ForeignKey(default=inventory.models.PriceLevel.get_default_pk, on_delete=django.db.models.deletion.PROTECT, to='inventory.pricelevel'),
+            model_name="customer",
+            name="customer_level",
+            field=models.ForeignKey(
+                default=inventory.models.PriceLevel.get_default_pk,
+                on_delete=django.db.models.deletion.PROTECT,
+                to="inventory.pricelevel",
+            ),
         ),
     ]

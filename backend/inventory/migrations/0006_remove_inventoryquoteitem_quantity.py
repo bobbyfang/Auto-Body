@@ -4,14 +4,16 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('inventory', '0005_rename_reference_number_inventoryquoteitem_inventory_quote_and_more'),
+        (
+            "inventory",
+            "0005_rename_reference_number_inventoryquoteitem_inventory_quote_and_more",
+        ),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='inventoryquoteitem',
-            name='quantity',
+            model_name="inventoryquoteitem",
+            name="quantity",
         ),
     ]

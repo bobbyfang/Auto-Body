@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('suppliers', '0004_alter_supplier_options'),
+        ("suppliers", "0004_alter_supplier_options"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='supplier',
-            options={'ordering': ['supplier_number']},
+            name="supplier",
+            options={"ordering": ["supplier_number"]},
         ),
     ]

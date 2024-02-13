@@ -11,8 +11,9 @@ class ContactPersonInline(admin.StackedInline):
 
 
 class SupplierAdmin(admin.ModelAdmin):
-    inlines = [ContactPersonInline,
-               ]
+    inlines = [
+        ContactPersonInline,
+    ]
 
 
 admin.site.register(Supplier, SupplierAdmin)

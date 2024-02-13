@@ -26,16 +26,10 @@ class Product(models.Model):
     quantity = models.IntegerField(default=0)
     safety_quantity = models.IntegerField(default=0)
     in_transit = models.IntegerField(default=0)
-    eta = models.DateField(default=None,
-                           null=True,
-                           blank=True)
+    eta = models.DateField(default=None, null=True, blank=True)
 
-    fob_cost = models.DecimalField(default=0.0,
-                                   decimal_places=2,
-                                   max_digits=16)
-    retail_price = models.DecimalField(default=0.0,
-                                       decimal_places=2,
-                                       max_digits=16)
+    fob_cost = models.DecimalField(default=0.0, decimal_places=2, max_digits=16)
+    retail_price = models.DecimalField(default=0.0, decimal_places=2, max_digits=16)
 
     manual_price = models.BooleanField(default=False)
     discountable = models.BooleanField(default=False)
@@ -48,14 +42,15 @@ class Product(models.Model):
 
 class PriceLevel(models.Model):
     level_name = models.CharField(primary_key=True, max_length=64)
-    markdown_percentage = models.DecimalField(default=0.0,
-                                              max_digits=5,
-                                              decimal_places=2)
+    markdown_percentage = models.DecimalField(
+        default=0.0, max_digits=5, decimal_places=2
+    )
 
     @classmethod
     def get_default_pk(cls):
-        price_level, _ = cls.objects.get_or_create(level_name="A",
-                                                   defaults={"markdown_percentage": 0.0})
+        price_level, _ = cls.objects.get_or_create(
+            level_name="A", defaults={"markdown_percentage": 0.0}
+        )
         return price_level.pk
 
     def __str__(self):
@@ -63,24 +58,26 @@ class PriceLevel(models.Model):
 
 
 class ProductPrice(models.Model):
-    product = models.ForeignKey(Product,
-                                on_delete=models.CASCADE,
-                                related_name='prices')
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="prices"
+    )
     level = models.ForeignKey(PriceLevel, on_delete=models.PROTECT)
-    price = models.DecimalField(default=0.0,
-                                max_digits=16,
-                                decimal_places=2)
+    price = models.DecimalField(default=0.0, max_digits=16, decimal_places=2)
 
     class Meta:
-        constraints = [models.UniqueConstraint(
-            fields=['product', 'level'], name='unique_product_level_price'
-        )]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "level"], name="unique_product_level_price"
+            )
+        ]
 
     def __str__(self):
-        return str(f"{self.product.product_number} {self.level.level_name} Price (R{self.price})")
+        return str(
+            f"{self.product.product_number} {self.level.level_name} Price (R{self.price})"
+        )
 
 
-@receiver(post_save, sender=Product)   
+@receiver(post_save, sender=Product)
 def create_product_prices(sender, instance, created, **kwargs):
     if created:
         price_levels = PriceLevel.objects.all()
@@ -88,7 +85,13 @@ def create_product_prices(sender, instance, created, **kwargs):
             ProductPrice.objects.create(
                 product=instance,
                 level=price_level,
-                price=(1 if instance.manual_price else (100 - price_level.markdown_percentage)) * instance.retail_price)
+                price=(
+                    1
+                    if instance.manual_price
+                    else (100 - price_level.markdown_percentage)
+                )
+                * instance.retail_price,
+            )
 
 
 class ProductLocation(models.Model):
@@ -111,7 +114,7 @@ class InventoryQuote(ReferenceModel):
             # today_count = len(InventoryQuote.objects.filter(created__date=today))
             last_ref_number = lastRefVariable(InventoryQuote)
             reference_header = convertDateToReferenceHeader(today)
-            self.reference_number = f'{reference_header}{last_ref_number+1:03}'
+            self.reference_number = f"{reference_header}{last_ref_number+1:03}"
         super(InventoryQuote, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -123,7 +126,9 @@ class InventoryQuoteItem(models.Model):
     inventory_quote = models.ForeignKey(InventoryQuote, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.product.product_number} ({self.inventory_quote.reference_number})'
+        return (
+            f"{self.product.product_number} ({self.inventory_quote.reference_number})"
+        )
 
 
 class PurchaseOrder(ReferenceModel):
@@ -137,7 +142,7 @@ class PurchaseOrder(ReferenceModel):
             # today_count = len(InventoryQuote.objects.filter(created__date=today))
             last_ref_number = lastRefVariable(PurchaseOrder)
             reference_header = convertDateToReferenceHeader(today)
-            self.reference_number = f'{reference_header}{last_ref_number+1:03}'
+            self.reference_number = f"{reference_header}{last_ref_number+1:03}"
         super(PurchaseOrder, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -146,16 +151,12 @@ class PurchaseOrder(ReferenceModel):
 
 class PurchaseOrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    unit_cost = models.DecimalField(default=0.0,
-                                decimal_places=2,
-                                max_digits=16)
+    unit_cost = models.DecimalField(default=0.0, decimal_places=2, max_digits=16)
     quantity = models.IntegerField(default=0)
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE)
-    subtotal = models.DecimalField(default=0.0,
-                                   decimal_places=2,
-                                   max_digits=16,
-                                   editable=False)
-    total = models.DecimalField(default=0.0,
-                                decimal_places=2,
-                                max_digits=16,
-                                editable=False)
+    subtotal = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    total = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )

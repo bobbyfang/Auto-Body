@@ -4,25 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('customers', '0007_alter_customer_fax_number_and_more'),
+        ("customers", "0007_alter_customer_fax_number_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='customer',
-            name='billing_address',
-            field=models.TextField(blank=True, default=''),
+            model_name="customer",
+            name="billing_address",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AlterField(
-            model_name='customer',
-            name='memo',
-            field=models.TextField(blank=True, default=''),
+            model_name="customer",
+            name="memo",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AlterField(
-            model_name='customer',
-            name='physical_address',
-            field=models.TextField(blank=True, default=''),
+            model_name="customer",
+            name="physical_address",
+            field=models.TextField(blank=True, default=""),
         ),
     ]
