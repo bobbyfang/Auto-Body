@@ -7,11 +7,11 @@ import Customers from "../../components/Customers";
 import Products from "../../components/Products";
 
 interface Props {
-    token: string,
-    setToken: any,
+    token: string;
+    setToken: any;
 }
 
-export default function DashboardLayout( {token, setToken}: Props ) {
+export default function DashboardLayout({ token, setToken }: Props) {
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     const handleDrawerOpen = () => {
@@ -25,44 +25,49 @@ export default function DashboardLayout( {token, setToken}: Props ) {
     const [app, setApp] = useState("");
 
     const content = (app: string) => {
-        switch(app) {
+        switch (app) {
             case "Quotes":
-                return (<h1>Quotes</h1>);
+                return <h1>Quotes</h1>;
             case "Orders":
-                return (<h1>Orders</h1>);
+                return <h1>Orders</h1>;
             case "Invoices":
-                return (<h1>Invoices</h1>);
+                return <h1>Invoices</h1>;
             case "Customers":
-                return (<Customers />);
+                return <Customers />;
             case "Products":
-                return (<Products />);
+                return <Products />;
             default:
-                return (<h1>Empty</h1>)
+                return <h1>Empty</h1>;
         }
-    }
+    };
 
     return (
         <>
-            <Header 
+            <Header
                 token={token}
                 setToken={setToken}
                 drawerOpen={drawerOpen}
-                handleDrawerOpen={handleDrawerOpen} 
-                app={app} />
+                handleDrawerOpen={handleDrawerOpen}
+                app={app}
+            />
             <SideDrawer
                 drawerOpen={drawerOpen}
-                handleDrawerClose={handleDrawerClose} 
-                setApp={setApp} />
-            <Box component="main" sx={{
-                position: "absolute",
+                handleDrawerClose={handleDrawerClose}
+                setApp={setApp}
+            />
+            <Box
+                component="main"
+                sx={{
+                    position: "absolute",
 
-                top: "60px",
-                left: "60px",
-                right: "0px",
-                height: "auto",
-                width: "auto",
-                padding: "20px",
-            }}>
+                    top: "60px",
+                    left: "60px",
+                    right: "0px",
+                    height: "auto",
+                    width: "auto",
+                    padding: "20px",
+                }}
+            >
                 {content(app)}
             </Box>
         </>
