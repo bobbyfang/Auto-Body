@@ -63,7 +63,7 @@ export default function DashboardLayout({ token, setToken }: Props) {
                     top: "60px",
                     left: "60px",
                     right: "0px",
-                    height: "auto",
+                    bottom: "0",
                     width: "auto",
                     padding: "20px",
                 }}

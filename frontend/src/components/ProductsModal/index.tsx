@@ -80,7 +80,7 @@ export default function ProductsModal({
         }
     };
 
-    const rowContent = (_index: number, row: Product) => {
+    const rowContent = (_index: number, row: typeof Product) => {
         return (
             <>
                 <TableRow

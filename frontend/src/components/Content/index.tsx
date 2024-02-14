@@ -33,6 +33,7 @@ export default function Content({
                 sx={{
                     backgroundColor: "white",
                     padding: "20px",
+                    height: "auto",
                 }}
             >
                 {children}
