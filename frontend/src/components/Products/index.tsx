@@ -15,10 +15,16 @@ import ProductsModal from "../ProductsModal";
 import CurrencyInput from "react-currency-input-field";
 import _ from "lodash";
 import Carousal from "react-material-ui-carousel";
-import { Add, Close, KeyboardBackspace, Save } from "@mui/icons-material";
+import {
+    Add,
+    Close,
+    KeyboardBackspace,
+    Replay,
+    Save,
+} from "@mui/icons-material";
 import axios from "axios";
 
-export const Product = {
+const Product = {
     product_number: "",
     description: "",
     oem_number: "",
@@ -29,15 +35,20 @@ export const Product = {
     safety_quantity: "",
     in_transit: "",
     units: "",
-    fob_cost: "",
-    retail_price: "",
-    prices: [],
+    fob_cost: "0",
+    retail_price: "0",
+    prices: [] as ProductPrice[],
     manual_price: false,
 };
 
-interface PriceLevel {
+interface ProductPrice {
     level?: string;
     price?: string;
+}
+
+interface PriceLevel {
+    level_name: string;
+    markdown_percentage: string;
 }
 
 export default function Products() {
@@ -47,8 +58,9 @@ export default function Products() {
             .then((res) => {
                 Product.prices = res.data.map((level: any) => ({
                     level: level.level_name,
-                    price: 0,
+                    price: "0",
                 }));
+                setPriceLevels(res.data);
             })
             .catch(() => {
                 setAlertMessage(`Could not retrieve the products.`);
@@ -59,6 +71,7 @@ export default function Products() {
 
     const [pastProduct, setPastProduct] = useState<typeof Product>(Product);
     const [product, setProduct] = useState<typeof Product>(Product);
+    const [priceLevels, setPriceLevels] = useState<PriceLevel[]>([]);
 
     const [isAlertVisible, setAlertVisibility] = useState(false);
     const [severity, setSeverity] = useState("");
@@ -75,30 +88,14 @@ export default function Products() {
 
     const handleProductChange = (event: ChangeEvent<HTMLInputElement>) => {
         event.preventDefault();
-        setProduct((prevProduct: typeof Product) => {
+        setProduct((_product: typeof Product) => {
             return {
-                ...prevProduct,
+                ..._product,
                 [event.target.name]:
                     event.target.name === "product_number"
                         ? event.target.value.toUpperCase()
                         : event.target.value,
             };
-            // if (event.target.value) {
-            //     return {
-            //         ...prevProduct,
-            //         [event.target.name]:
-            //             event.target.name === "product_number"
-            //                 ? event.target.value.toUpperCase()
-            //                 : event.target.value,
-            //     };
-            // } else {
-            //     console.log("no value");
-
-            //     delete prevProduct[event.target.name];
-            //     console.log(prevProduct);
-
-            //     return { ...prevProduct };
-            // }
         });
     };
 
@@ -172,19 +169,45 @@ export default function Products() {
         event: ChangeEvent<HTMLInputElement>,
         checked: boolean
     ) => {
-        setProduct((prevProduct: typeof Product) => {
-            return {
-                ...prevProduct,
-                [event.target.name]: checked,
-            };
+        setProduct((_product: typeof Product) => {
+            if (checked) {
+                return {
+                    ..._product,
+                    [event.target.name]: checked,
+                };
+            } else {
+                return {
+                    ..._product,
+                    [event.target.name]: checked,
+                    prices: _product.prices.map((productPrice, index) => {
+                        return {
+                            ...productPrice,
+                            price: `${
+                                (parseFloat(_product.retail_price) *
+                                    (100.0 -
+                                        parseFloat(
+                                            priceLevels[index]
+                                                .markdown_percentage
+                                        ))) /
+                                100.0
+                            }`,
+                        };
+                    }),
+                };
+            }
         });
     };
 
     const fieldsDirty = () => {
-        // console.log(product);
-
-        // return !_.isEqual(pastProduct, {}) && !_.isEqual(pastProduct, product);
         return !_.isEqual(pastProduct, product);
+    };
+
+    const handleResetPrices = () => {
+        setProduct((_product) => ({
+            ..._product,
+            manual_price: pastProduct.manual_price,
+            prices: pastProduct.prices,
+        }));
     };
 
     return (
@@ -452,32 +475,46 @@ export default function Products() {
                             disabled={!isAdd && _.isEqual(product, Product)}
                         />
                     </Stack>
-                    <FormGroup>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    name="manual_price"
-                                    checked={product.manual_price}
-                                    onChange={handleCheckboxChange}
-                                />
-                            }
-                            label="Manual Price"
-                            sx={{ color: "black" }}
-                        />
-                    </FormGroup>
-                    {product.prices?.map((price: PriceLevel, index) => (
+                    <Stack direction="row">
+                        <FormGroup>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        name="manual_price"
+                                        checked={product.manual_price}
+                                        onChange={handleCheckboxChange}
+                                    />
+                                }
+                                label="Manual Price"
+                                sx={{ color: "black" }}
+                            />
+                        </FormGroup>
+                        <Button
+                            sx={{
+                                visibility: _.isEqual(
+                                    product.prices,
+                                    pastProduct.prices
+                                )
+                                    ? "hidden"
+                                    : "visible",
+                            }}
+                            onClick={handleResetPrices}
+                        >
+                            <Replay />
+                            Reset Prices
+                        </Button>
+                    </Stack>
+                    {product.prices?.map((price: ProductPrice, index) => (
                         <TextField
                             key={index}
                             InputLabelProps={{ shrink: true }}
                             value={price.price ?? ""}
                             label={`${price.level} Price`}
                             margin="normal"
-                            contentEditable={false}
                             name={`${price.level}`}
                             InputProps={{
                                 inputComponent: CurrencyInput,
                                 inputProps: {
-                                    // value: product.fob_cost ?? "",
                                     prefix: "R",
                                     defaultValue: 0,
                                     decimalSeparator: ".",
@@ -499,7 +536,10 @@ export default function Products() {
                                     },
                                 },
                             }}
-                            disabled={!isAdd && _.isEqual(product, Product)}
+                            disabled={
+                                (!isAdd && _.isEqual(product, Product)) ||
+                                !product.manual_price
+                            }
                         />
                     ))}
                 </Stack>
