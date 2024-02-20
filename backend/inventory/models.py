@@ -12,6 +12,9 @@ from common.abstract.models import ReferenceModel
 
 
 class Product(models.Model):
+    class Meta:
+        ordering = ["product_number"]
+
     product_number = models.CharField(primary_key=True, max_length=20)
     description = models.TextField(default="")
     oem_number = models.CharField(max_length=128, blank=True)

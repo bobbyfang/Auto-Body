@@ -16,6 +16,7 @@ import CurrencyInput from "react-currency-input-field";
 import _ from "lodash";
 import Carousal from "react-material-ui-carousel";
 import { Add, Close, KeyboardBackspace, Save } from "@mui/icons-material";
+import axios from "axios";
 
 export const Product = {
     product_number: "",
@@ -40,6 +41,22 @@ interface PriceLevel {
 }
 
 export default function Products() {
+    useEffect(() => {
+        axios
+            .get("http://localhost:8000/api/price_levels/")
+            .then((res) => {
+                Product.prices = res.data.map((level: any) => ({
+                    level: level.level_name,
+                    price: 0,
+                }));
+            })
+            .catch(() => {
+                setAlertMessage(`Could not retrieve the products.`);
+                setSeverity("error");
+                setAlertVisibility(true);
+            });
+    }, []);
+
     const [pastProduct, setPastProduct] = useState<typeof Product>(Product);
     const [product, setProduct] = useState<typeof Product>(Product);
 
@@ -55,29 +72,33 @@ export default function Products() {
     useEffect(() => {
         setProduct(pastProduct);
     }, [pastProduct]);
-    // useEffect(() => {
-    //     console.log(product);
-    // }, [product]);
 
     const handleProductChange = (event: ChangeEvent<HTMLInputElement>) => {
         event.preventDefault();
         setProduct((prevProduct: typeof Product) => {
-            if (event.target.value) {
-                return {
-                    ...prevProduct,
-                    [event.target.name]:
-                        event.target.name === "product_number"
-                            ? event.target.value.toUpperCase()
-                            : event.target.value,
-                };
-            } else {
-                console.log("no value");
+            return {
+                ...prevProduct,
+                [event.target.name]:
+                    event.target.name === "product_number"
+                        ? event.target.value.toUpperCase()
+                        : event.target.value,
+            };
+            // if (event.target.value) {
+            //     return {
+            //         ...prevProduct,
+            //         [event.target.name]:
+            //             event.target.name === "product_number"
+            //                 ? event.target.value.toUpperCase()
+            //                 : event.target.value,
+            //     };
+            // } else {
+            //     console.log("no value");
 
-                delete prevProduct[event.target.name];
-                console.log(prevProduct);
+            //     delete prevProduct[event.target.name];
+            //     console.log(prevProduct);
 
-                return { ...prevProduct };
-            }
+            //     return { ...prevProduct };
+            // }
         });
     };
 
@@ -95,7 +116,57 @@ export default function Products() {
         setProduct(pastProduct);
     };
 
-    const handleSave = () => {};
+    const handleSave = async () => {
+        const csrfToken = await axios
+            .get("http://localhost:8000/csrf_token/")
+            .then((response) => response.data.csrfToken)
+            .catch((error) => console.error(error));
+        if (isAdd) {
+            console.log("is Add");
+            axios
+                .post(`http://localhost:8000/api/products/`, product, {
+                    headers: { "X-CSRFToken": csrfToken },
+                })
+                .then(() => {
+                    setPastProduct(product);
+                    setAlertMessage(
+                        `Successfully saved or updated ${product.product_number}.`
+                    );
+                    setSeverity("success");
+                    setAlertVisibility(true);
+                })
+                .catch(() => {
+                    setAlertMessage(
+                        `Could not save or update ${product.product_number}.`
+                    );
+                    setSeverity("error");
+                    setAlertVisibility(true);
+                });
+        } else {
+            console.log("is Update");
+            axios
+                .patch(
+                    `http://localhost:8000/api/products/${product.product_number}/`,
+                    product,
+                    { headers: { "X-CSRFToken": csrfToken } }
+                )
+                .then(() => {
+                    setPastProduct(product);
+                    setAlertMessage(
+                        `Successfully saved or updated ${product.product_number}.`
+                    );
+                    setSeverity("success");
+                    setAlertVisibility(true);
+                })
+                .catch(() => {
+                    setAlertMessage(
+                        `Could not save or update ${product.product_number}.`
+                    );
+                    setSeverity("error");
+                    setAlertVisibility(true);
+                });
+        }
+    };
 
     const handleCheckboxChange = (
         event: ChangeEvent<HTMLInputElement>,
@@ -197,7 +268,7 @@ export default function Products() {
                             value={product.oem_number}
                             label="OEM Number"
                             contentEditable={false}
-                            disabled={_.isEqual(product, {})}
+                            disabled={!isAdd && _.isEqual(product, Product)}
                             name="oem_number"
                             onChange={handleProductChange}
                         />
@@ -219,6 +290,7 @@ export default function Products() {
                     contentEditable={false}
                     name="make"
                     onChange={handleProductChange}
+                    disabled={!isAdd && _.isEqual(product, Product)}
                 />
                 <TextField
                     InputLabelProps={{ shrink: true }}
@@ -228,6 +300,7 @@ export default function Products() {
                     contentEditable={false}
                     name="model"
                     onChange={handleProductChange}
+                    disabled={!isAdd && _.isEqual(product, Product)}
                 />
                 <TextField
                     InputLabelProps={{ shrink: true }}
@@ -237,6 +310,7 @@ export default function Products() {
                     contentEditable={false}
                     name="year"
                     onChange={handleProductChange}
+                    disabled={!isAdd && _.isEqual(product, Product)}
                 />
                 <Divider
                     textAlign="left"
@@ -255,6 +329,7 @@ export default function Products() {
                         contentEditable={false}
                         name="description"
                         onChange={handleProductChange}
+                        disabled={!isAdd && _.isEqual(product, Product)}
                     />
                     <TextField
                         InputLabelProps={{ shrink: true }}
@@ -264,6 +339,7 @@ export default function Products() {
                         contentEditable={false}
                         name="quantity"
                         onChange={handleProductChange}
+                        disabled={!isAdd && _.isEqual(product, Product)}
                     />
                     <TextField
                         InputLabelProps={{ shrink: true }}
@@ -273,6 +349,7 @@ export default function Products() {
                         contentEditable={false}
                         name="safety_quantity"
                         onChange={handleProductChange}
+                        disabled={!isAdd && _.isEqual(product, Product)}
                     />
                     <TextField
                         InputLabelProps={{ shrink: true }}
@@ -282,6 +359,7 @@ export default function Products() {
                         contentEditable={false}
                         name="in_transit"
                         onChange={handleProductChange}
+                        disabled={!isAdd && _.isEqual(product, Product)}
                     />
                     <TextField
                         InputLabelProps={{ shrink: true }}
@@ -291,6 +369,7 @@ export default function Products() {
                         contentEditable={false}
                         name="units"
                         onChange={handleProductChange}
+                        disabled={!isAdd && _.isEqual(product, Product)}
                     />
                 </Stack>
                 <Divider
@@ -336,7 +415,7 @@ export default function Products() {
                                     },
                                 },
                             }}
-                            // onChange={}
+                            disabled={!isAdd && _.isEqual(product, Product)}
                         />
                         <TextField
                             InputLabelProps={{ shrink: true }}
@@ -370,7 +449,7 @@ export default function Products() {
                                     },
                                 },
                             }}
-                            // onChange={handleProductChange}
+                            disabled={!isAdd && _.isEqual(product, Product)}
                         />
                     </Stack>
                     <FormGroup>
@@ -388,6 +467,7 @@ export default function Products() {
                     </FormGroup>
                     {product.prices?.map((price: PriceLevel, index) => (
                         <TextField
+                            key={index}
                             InputLabelProps={{ shrink: true }}
                             value={price.price ?? ""}
                             label={`${price.level} Price`}
@@ -419,63 +499,68 @@ export default function Products() {
                                     },
                                 },
                             }}
+                            disabled={!isAdd && _.isEqual(product, Product)}
                         />
                     ))}
                 </Stack>
-                <>
-                    <Divider
-                        textAlign="left"
-                        sx={{
-                            color: "black",
-                        }}
-                    >
-                        Pictures
-                    </Divider>
-                    <Carousal
-                        sx={{
-                            // height: "400px",
-                            width: "400px",
-                        }}
-                        navButtonsAlwaysVisible
-                    >
-                        <Paper
+                {_.isEqual(product, Product) ? (
+                    <></>
+                ) : (
+                    <>
+                        <Divider
+                            textAlign="left"
                             sx={{
-                                height: "400px",
-                                width: "400px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
+                                color: "black",
                             }}
                         >
-                            <img
-                                src="http://localhost/images/products/TY010860FH-0.jpeg"
-                                style={{
-                                    maxWidth: "100%",
-                                    maxHeight: "100%",
-                                    objectFit: "contain",
-                                }}
-                            />
-                        </Paper>
-                        <Paper
+                            Pictures
+                        </Divider>
+                        <Carousal
                             sx={{
-                                height: "400px",
+                                // height: "400px",
                                 width: "400px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
                             }}
+                            navButtonsAlwaysVisible
                         >
-                            <img
-                                src="http://localhost/images/products/TY010860FH-1.jpeg"
-                                style={{
-                                    maxWidth: "100%",
-                                    maxHeight: "100%",
-                                    objectFit: "contain",
+                            <Paper
+                                sx={{
+                                    height: "400px",
+                                    width: "400px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                 }}
-                            />
-                        </Paper>
-                    </Carousal>
-                </>
+                            >
+                                <img
+                                    src="http://localhost/images/products/TY010860FH-0.jpeg"
+                                    style={{
+                                        maxWidth: "100%",
+                                        maxHeight: "100%",
+                                        objectFit: "contain",
+                                    }}
+                                />
+                            </Paper>
+                            <Paper
+                                sx={{
+                                    height: "400px",
+                                    width: "400px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <img
+                                    src="http://localhost/images/products/TY010860FH-1.jpeg"
+                                    style={{
+                                        maxWidth: "100%",
+                                        maxHeight: "100%",
+                                        objectFit: "contain",
+                                    }}
+                                />
+                            </Paper>
+                        </Carousal>
+                    </>
+                )}
             </Content>
         </>
     );
