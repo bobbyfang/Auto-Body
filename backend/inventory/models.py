@@ -101,13 +101,20 @@ class ProductLocation(models.Model):
     location = models.CharField(max_length=64, default="")
     date = models.DateTimeField(auto_now_add=True)
     inactive = models.BooleanField(default=False)
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(
+        Product, on_delete=models.PROTECT, related_name="locations"
+    )
 
 
 class ProductSupplierItem(models.Model):
-    item_number = models.CharField(max_length=64, default="")
-    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    supplier_number = models.CharField(max_length=64, default="")
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.PROTECT,
+    )
+    product = models.ForeignKey(
+        Product, on_delete=models.PROTECT, related_name="supplier_numbers"
+    )
 
 
 class InventoryQuote(ReferenceModel):

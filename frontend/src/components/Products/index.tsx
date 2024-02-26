@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import Content from "../Content";
 import {
     Box,
@@ -11,6 +11,12 @@ import {
     Stack,
     TextField,
 } from "@mui/material";
+import {
+    DataGrid,
+    GridCellModes,
+    GridCellModesModel,
+    GridCellParams,
+} from "@mui/x-data-grid";
 import ProductsModal from "../ProductsModal";
 import CurrencyInput from "react-currency-input-field";
 import _ from "lodash";
@@ -39,6 +45,7 @@ const Product = {
     retail_price: "0",
     prices: [] as ProductPrice[],
     manual_price: false,
+    supplier_numbers: [] as SupplierNumber[],
 };
 
 interface ProductPrice {
@@ -49,6 +56,12 @@ interface ProductPrice {
 interface PriceLevel {
     level_name: string;
     markdown_percentage: string;
+}
+
+interface SupplierNumber {
+    id: string;
+    supplier_number: string;
+    supplier: string;
 }
 
 export default function Products() {
@@ -67,11 +80,27 @@ export default function Products() {
                 setSeverity("error");
                 setAlertVisibility(true);
             });
+        axios
+            .get("http://localhost:8000/api/suppliers/")
+            .then((res) => {
+                var tempSuppliers = {};
+                res.data.forEach((supplier: any) => {
+                    tempSuppliers[supplier.supplier_number] = supplier.name;
+                });
+
+                setSuppliers(tempSuppliers);
+            })
+            .catch(() => {
+                setAlertMessage(`Could not retrieve the products.`);
+                setSeverity("error");
+                setAlertVisibility(true);
+            });
     }, []);
 
     const [pastProduct, setPastProduct] = useState<typeof Product>(Product);
     const [product, setProduct] = useState<typeof Product>(Product);
     const [priceLevels, setPriceLevels] = useState<PriceLevel[]>([]);
+    const [suppliers, setSuppliers] = useState({});
 
     const [isAlertVisible, setAlertVisibility] = useState(false);
     const [severity, setSeverity] = useState("");
@@ -210,6 +239,84 @@ export default function Products() {
         }));
     };
 
+    const supplierColumns = [
+        {
+            field: "supplier_number",
+            headerName: "Supplier Number",
+            width: 150,
+            editable: true,
+        },
+        {
+            field: "supplier",
+            headerName: "Supplier",
+            width: 150,
+            type: "singleSelect",
+            valueOptions: Object.entries(suppliers).map(([value, label]) => ({
+                value,
+                label,
+            })),
+            editable: true,
+        },
+    ];
+
+    const [cellModesModel, setCellModesModel] = useState<GridCellModesModel>(
+        {}
+    );
+
+    const handleCellClick = useCallback(
+        (params: GridCellParams, event: React.MouseEvent) => {
+            if (!params.isEditable) {
+                return;
+            }
+
+            // Ignore portal
+            if (
+                (event.target as any).nodeType === 1 &&
+                !event.currentTarget.contains(event.target as Element)
+            ) {
+                return;
+            }
+
+            setCellModesModel((prevModel) => {
+                return {
+                    // Revert the mode of the other cells from other rows
+                    ...Object.keys(prevModel).reduce(
+                        (acc, id) => ({
+                            ...acc,
+                            [id]: Object.keys(prevModel[id]).reduce(
+                                (acc2, field) => ({
+                                    ...acc2,
+                                    [field]: { mode: GridCellModes.View },
+                                }),
+                                {}
+                            ),
+                        }),
+                        {}
+                    ),
+                    [params.id]: {
+                        // Revert the mode of other cells in the same row
+                        ...Object.keys(prevModel[params.id] || {}).reduce(
+                            (acc, field) => ({
+                                ...acc,
+                                [field]: { mode: GridCellModes.View },
+                            }),
+                            {}
+                        ),
+                        [params.field]: { mode: GridCellModes.Edit },
+                    },
+                };
+            });
+        },
+        []
+    );
+
+    const handleCellModesModelChange = useCallback(
+        (newModel: GridCellModesModel) => {
+            setCellModesModel(newModel);
+        },
+        []
+    );
+
     return (
         <>
             <Content
@@ -246,7 +353,7 @@ export default function Products() {
                         disabled={!fieldsDirty()}
                         sx={{
                             display:
-                                fieldsDirty() && !_.isEqual(product, {})
+                                fieldsDirty() && !_.isEqual(product, Product)
                                     ? ""
                                     : "none",
                         }}
@@ -254,6 +361,7 @@ export default function Products() {
                         <Save /> {isAdd ? "Save" : "Update"}
                     </Button>
                 </Stack>
+
                 <ProductsModal
                     open={productsModalOpen}
                     setOpen={setProductsModalOpen}
@@ -263,30 +371,38 @@ export default function Products() {
                     setProduct={setPastProduct}
                 />
 
-                <Stack direction="row" justifyContent="space-between">
-                    <Box
-                        margin={"normal"}
-                        sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            justifyContent: "center",
-                        }}
+                <Stack direction="row">
+                    <Stack
+                        direction="column"
+                        // alignContent="lef"
+                        // justifyContent="space-between"
+                        sx={{ width: "20%" }}
                     >
-                        <TextField
-                            InputLabelProps={{ shrink: true }}
-                            value={product.product_number ?? ""}
-                            label="Product Number"
-                            disabled={!isAdd}
-                            name="product_number"
-                            onChange={handleProductChange}
-                        />
-                        <Button
-                            onClick={() => setProductsModalOpen(true)}
-                            disabled={fieldsDirty()}
+                        <Box
+                            margin={"normal"}
+                            sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                justifyContent: "flex-start",
+                            }}
                         >
-                            Select
-                        </Button>
+                            <TextField
+                                InputLabelProps={{ shrink: true }}
+                                value={product.product_number ?? ""}
+                                label="Product Number"
+                                disabled={!isAdd}
+                                name="product_number"
+                                onChange={handleProductChange}
+                            />
+                            <Button
+                                onClick={() => setProductsModalOpen(true)}
+                                disabled={fieldsDirty()}
+                            >
+                                Select
+                            </Button>
+                        </Box>
                         <TextField
+                            margin="normal"
                             InputLabelProps={{ shrink: true }}
                             value={product.oem_number}
                             label="OEM Number"
@@ -295,8 +411,54 @@ export default function Products() {
                             name="oem_number"
                             onChange={handleProductChange}
                         />
-                    </Box>
+                    </Stack>
+                    <Paper
+                        style={{
+                            margin: "0 0 10px 20px",
+                        }}
+                        sx={{
+                            height: "127px",
+                            width: "30%",
+                        }}
+                    >
+                        <DataGrid
+                            rows={product.supplier_numbers}
+                            columns={supplierColumns}
+                            getRowId={(row) => row.id}
+                            hideFooter={true}
+                            cellModesModel={cellModesModel}
+                            onCellModesModelChange={handleCellModesModelChange}
+                            onCellClick={handleCellClick}
+                            processRowUpdate={(updatedRow) => {
+                                setProduct((_product) => ({
+                                    ..._product,
+                                    supplier_numbers:
+                                        _product.supplier_numbers.map((el) =>
+                                            el.id === updatedRow.id
+                                                ? { ...updatedRow }
+                                                : { ...el }
+                                        ),
+                                }));
+                                return updatedRow;
+                            }}
+                            onProcessRowUpdateError={() => {
+                                setAlertMessage(
+                                    `An error occured while changing the row values.`
+                                );
+                                setSeverity("error");
+                                setAlertVisibility(true);
+                            }}
+                        />
+                    </Paper>
+                    <Button
+                        onClick={() => {
+                            console.log(product);
+                        }}
+                    >
+                        Go
+                    </Button>
                 </Stack>
+
                 <Divider
                     textAlign="left"
                     sx={{
@@ -572,7 +734,7 @@ export default function Products() {
                                 }}
                             >
                                 <img
-                                    src="http://localhost/images/products/TY010860FH-0.jpeg"
+                                    src={`http://localhost/images/products/${product.product_number}.jpg`}
                                     style={{
                                         maxWidth: "100%",
                                         maxHeight: "100%",
@@ -580,7 +742,7 @@ export default function Products() {
                                     }}
                                 />
                             </Paper>
-                            <Paper
+                            {/* <Paper
                                 sx={{
                                     height: "400px",
                                     width: "400px",
@@ -597,7 +759,7 @@ export default function Products() {
                                         objectFit: "contain",
                                     }}
                                 />
-                            </Paper>
+                            </Paper> */}
                         </Carousal>
                     </>
                 )}

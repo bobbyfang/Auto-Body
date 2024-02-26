@@ -1,4 +1,10 @@
-from inventory.models import PriceLevel, Product, ProductPrice
+from inventory.models import (
+    PriceLevel,
+    Product,
+    ProductLocation,
+    ProductPrice,
+    ProductSupplierItem,
+)
 
 from rest_framework import serializers
 
@@ -12,7 +18,7 @@ class PriceLevelSerializer(serializers.ModelSerializer):
 class ProductPriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductPrice
-        fields = "__all__"
+        fields = ["price", "level"]
 
     def update(self, instance, validated_data):
         instance.price = validated_data.get("price", instance.price)
@@ -20,8 +26,24 @@ class ProductPriceSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ProductLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductLocation
+        fields = ["location", "date", "inactive"]
+
+
+class ProductSupplierItemSerializer(serializers.ModelSerializer):
+    # supplier = SupplierSerializer()
+
+    class Meta:
+        model = ProductSupplierItem
+        fields = ["id", "supplier_number", "supplier"]
+
+
 class ProductSerializer(serializers.ModelSerializer):
     prices = ProductPriceSerializer(many=True)
+    supplier_numbers = ProductSupplierItemSerializer(many=True)
+    locations = ProductLocationSerializer(many=True)
 
     class Meta:
         model = Product
@@ -75,8 +97,3 @@ class ProductSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-
-
-class ProductHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Product
