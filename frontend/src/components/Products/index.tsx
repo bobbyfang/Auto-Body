@@ -1,4 +1,4 @@
-import { ChangeEvent, useCallback, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import Content from "../Content";
 import {
     Box,
@@ -12,10 +12,9 @@ import {
     TextField,
 } from "@mui/material";
 import {
-    DataGrid,
-    GridCellModes,
-    GridCellModesModel,
-    GridCellParams,
+    GridActionsCellItem,
+    GridRowId,
+    GridToolbarContainer,
 } from "@mui/x-data-grid";
 import ProductsModal from "../ProductsModal";
 import CurrencyInput from "react-currency-input-field";
@@ -24,11 +23,13 @@ import Carousal from "react-material-ui-carousel";
 import {
     Add,
     Close,
+    Delete,
     KeyboardBackspace,
     Replay,
     Save,
 } from "@mui/icons-material";
 import axios from "axios";
+import SingleClickDataGrid from "../common/SingleClickDataGrid";
 
 const Product = {
     product_number: "",
@@ -46,6 +47,7 @@ const Product = {
     prices: [] as ProductPrice[],
     manual_price: false,
     supplier_numbers: [] as SupplierNumber[],
+    locations: [] as Location[],
 };
 
 interface ProductPrice {
@@ -63,6 +65,15 @@ interface SupplierNumber {
     supplier_number: string;
     supplier: string;
 }
+const SUPPLIER_NUMBERS = "SUPPLIER_NUMBERS";
+
+interface Location {
+    id: string;
+    location: string;
+    date: string;
+    inactive: boolean;
+}
+const LOCATIONS = "LOCATIONS";
 
 export default function Products() {
     useEffect(() => {
@@ -107,7 +118,6 @@ export default function Products() {
     const [alertMessage, setAlertMessage] = useState("");
 
     const [productsModalOpen, setProductsModalOpen] = useState(false);
-    const [imagesModalOpen, setImagesModalOpen] = useState(false);
 
     const [isAdd, setAdd] = useState(false);
 
@@ -169,15 +179,14 @@ export default function Products() {
                     setAlertVisibility(true);
                 });
         } else {
-            console.log("is Update");
             axios
                 .patch(
                     `http://localhost:8000/api/products/${product.product_number}/`,
                     product,
                     { headers: { "X-CSRFToken": csrfToken } }
                 )
-                .then(() => {
-                    setPastProduct(product);
+                .then((response) => {
+                    setPastProduct(response.data);
                     setAlertMessage(
                         `Successfully saved or updated ${product.product_number}.`
                     );
@@ -190,6 +199,7 @@ export default function Products() {
                     );
                     setSeverity("error");
                     setAlertVisibility(true);
+                    console.log(product);
                 });
         }
     };
@@ -239,7 +249,25 @@ export default function Products() {
         }));
     };
 
-    const supplierColumns = [
+    const handleDeleteClick = (id: GridRowId, list: string) => () => {
+        if (list === SUPPLIER_NUMBERS) {
+            setProduct((_product) => ({
+                ..._product,
+                supplier_numbers: _product.supplier_numbers.filter(
+                    (supplierNumber) => supplierNumber.id !== id
+                ),
+            }));
+        } else if (list === LOCATIONS) {
+            setProduct((_product) => ({
+                ..._product,
+                locations: _product.locations.filter(
+                    (location) => location.id !== id
+                ),
+            }));
+        }
+    };
+
+    const suppliersColumns = [
         {
             field: "supplier_number",
             headerName: "Supplier Number",
@@ -257,65 +285,98 @@ export default function Products() {
             })),
             editable: true,
         },
+        {
+            field: "actions",
+            type: "actions",
+            width: 50,
+            cellClassName: "actions",
+            getActions: ({ id }) => {
+                return [
+                    <GridActionsCellItem
+                        icon={<Delete />}
+                        onClick={handleDeleteClick(id, SUPPLIER_NUMBERS)}
+                    />,
+                ];
+            },
+        },
     ];
 
-    const [cellModesModel, setCellModesModel] = useState<GridCellModesModel>(
-        {}
-    );
-
-    const handleCellClick = useCallback(
-        (params: GridCellParams, event: React.MouseEvent) => {
-            if (!params.isEditable) {
-                return;
-            }
-
-            // Ignore portal
-            if (
-                (event.target as any).nodeType === 1 &&
-                !event.currentTarget.contains(event.target as Element)
-            ) {
-                return;
-            }
-
-            setCellModesModel((prevModel) => {
-                return {
-                    // Revert the mode of the other cells from other rows
-                    ...Object.keys(prevModel).reduce(
-                        (acc, id) => ({
-                            ...acc,
-                            [id]: Object.keys(prevModel[id]).reduce(
-                                (acc2, field) => ({
-                                    ...acc2,
-                                    [field]: { mode: GridCellModes.View },
-                                }),
-                                {}
-                            ),
-                        }),
-                        {}
-                    ),
-                    [params.id]: {
-                        // Revert the mode of other cells in the same row
-                        ...Object.keys(prevModel[params.id] || {}).reduce(
-                            (acc, field) => ({
-                                ...acc,
-                                [field]: { mode: GridCellModes.View },
-                            }),
-                            {}
-                        ),
-                        [params.field]: { mode: GridCellModes.Edit },
-                    },
-                };
-            });
+    const locationsColumns = [
+        {
+            field: "location",
+            headerName: "Location",
+            // width: "100px",
+            editable: true,
         },
-        []
-    );
-
-    const handleCellModesModelChange = useCallback(
-        (newModel: GridCellModesModel) => {
-            setCellModesModel(newModel);
+        {
+            field: "date",
+            headerName: "Date",
+            // minWidth: "10px",
+            editable: false,
+            valueFormatter: (row) => new Date(row.value).toLocaleString(),
         },
-        []
-    );
+        {
+            field: "inactive",
+            headerName: "Inactive",
+            type: "boolean",
+            // width: "auto",
+            editable: "true",
+        },
+        {
+            field: "actions",
+            type: "actions",
+            // width: 50,
+            cellClassName: "actions",
+            getActions: ({ id }) => {
+                return [
+                    <GridActionsCellItem
+                        icon={<Delete />}
+                        onClick={handleDeleteClick(id, LOCATIONS)}
+                    />,
+                ];
+            },
+        },
+    ];
+
+    const EditToolbar = (props) => {
+        const { setProduct, list } = props;
+
+        const handleClick = () => {
+            const id = crypto.randomUUID();
+
+            if (list === SUPPLIER_NUMBERS) {
+                setProduct((_product) => ({
+                    ..._product,
+                    supplier_numbers: [
+                        ..._product.supplier_numbers,
+                        {
+                            id,
+                            supplier_number: "",
+                            supplier: Object.keys(suppliers)[0],
+                        },
+                    ],
+                }));
+            } else if (list === LOCATIONS) {
+                setProduct((_product) => ({
+                    ..._product,
+                    locations: [
+                        ..._product.locations,
+                        {
+                            id,
+                            location: "",
+                            date: new Date().toLocaleString(),
+                            inactive: false,
+                        },
+                    ],
+                }));
+            }
+        };
+        return (
+            <GridToolbarContainer>
+                <Button startIcon={<Add />} onClick={handleClick}></Button>
+            </GridToolbarContainer>
+        );
+    };
 
     return (
         <>
@@ -325,18 +386,23 @@ export default function Products() {
                 alertMessage={alertMessage}
                 severity={severity}
             >
+                {/* Toolbar */}
                 <Stack direction="row" justifyContent="space-between">
                     <Button
                         onClick={handleAdd}
                         disabled={fieldsDirty()}
-                        sx={{ display: isAdd || fieldsDirty() ? "none" : "" }}
+                        sx={{
+                            display: isAdd || fieldsDirty() ? "none" : "",
+                        }}
                     >
                         <Add />
                         Add
                     </Button>
                     <Button
                         onClick={handleCancel}
-                        sx={{ display: fieldsDirty() && !isAdd ? "" : "none" }}
+                        sx={{
+                            display: fieldsDirty() && !isAdd ? "" : "none",
+                        }}
                     >
                         <Close />
                         Cancel
@@ -372,339 +438,407 @@ export default function Products() {
                 />
 
                 <Stack direction="row">
-                    <Stack
-                        direction="column"
-                        // alignContent="lef"
-                        // justifyContent="space-between"
-                        sx={{ width: "20%" }}
-                    >
-                        <Box
-                            margin={"normal"}
+                    {/* Left stack */}
+                    <Stack>
+                        <Stack direction="row">
+                            <Stack direction="column" sx={{ width: "100%" }}>
+                                <Box
+                                    margin={"normal"}
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "row",
+                                        justifyContent: "flex-start",
+                                    }}
+                                >
+                                    <TextField
+                                        InputLabelProps={{ shrink: true }}
+                                        value={product.product_number ?? ""}
+                                        label="Product Number"
+                                        disabled={!isAdd}
+                                        name="product_number"
+                                        onChange={handleProductChange}
+                                    />
+                                    <Button
+                                        onClick={() =>
+                                            setProductsModalOpen(true)
+                                        }
+                                        disabled={fieldsDirty()}
+                                    >
+                                        Select
+                                    </Button>
+                                </Box>
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    value={product.oem_number}
+                                    label="OEM Number"
+                                    contentEditable={false}
+                                    disabled={
+                                        !isAdd && _.isEqual(product, Product)
+                                    }
+                                    name="oem_number"
+                                    onChange={handleProductChange}
+                                />
+                            </Stack>
+                        </Stack>
+
+                        <Divider
+                            textAlign="left"
                             sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                justifyContent: "flex-start",
+                                color: "black",
                             }}
                         >
+                            Vehicle Details
+                        </Divider>
+                        <TextField
+                            InputLabelProps={{ shrink: true }}
+                            value={product.make ?? ""}
+                            label="Make"
+                            margin="normal"
+                            contentEditable={false}
+                            name="make"
+                            onChange={handleProductChange}
+                            disabled={!isAdd && _.isEqual(product, Product)}
+                        />
+                        <TextField
+                            InputLabelProps={{ shrink: true }}
+                            value={product.model ?? ""}
+                            label="Model"
+                            margin="normal"
+                            contentEditable={false}
+                            name="model"
+                            onChange={handleProductChange}
+                            disabled={!isAdd && _.isEqual(product, Product)}
+                        />
+                        <TextField
+                            InputLabelProps={{ shrink: true }}
+                            value={product.year ?? ""}
+                            label="Year"
+                            margin="normal"
+                            contentEditable={false}
+                            name="year"
+                            onChange={handleProductChange}
+                            disabled={!isAdd && _.isEqual(product, Product)}
+                        />
+                        <Divider
+                            textAlign="left"
+                            sx={{
+                                color: "black",
+                            }}
+                        >
+                            Product Details
+                        </Divider>
+                        <Stack direction="row">
                             <TextField
                                 InputLabelProps={{ shrink: true }}
-                                value={product.product_number ?? ""}
-                                label="Product Number"
-                                disabled={!isAdd}
-                                name="product_number"
+                                value={product.description ?? ""}
+                                label="Description"
+                                margin="normal"
+                                contentEditable={false}
+                                name="description"
                                 onChange={handleProductChange}
+                                disabled={!isAdd && _.isEqual(product, Product)}
                             />
-                            <Button
-                                onClick={() => setProductsModalOpen(true)}
-                                disabled={fieldsDirty()}
-                            >
-                                Select
-                            </Button>
-                        </Box>
-                        <TextField
-                            margin="normal"
-                            InputLabelProps={{ shrink: true }}
-                            value={product.oem_number}
-                            label="OEM Number"
-                            contentEditable={false}
-                            disabled={!isAdd && _.isEqual(product, Product)}
-                            name="oem_number"
-                            onChange={handleProductChange}
-                        />
+                            <TextField
+                                InputLabelProps={{ shrink: true }}
+                                value={product.quantity ?? ""}
+                                label="Quantity"
+                                margin="normal"
+                                contentEditable={false}
+                                name="quantity"
+                                onChange={handleProductChange}
+                                disabled={!isAdd && _.isEqual(product, Product)}
+                            />
+                            <TextField
+                                InputLabelProps={{ shrink: true }}
+                                value={product.safety_quantity ?? ""}
+                                label="Safety Quantity"
+                                margin="normal"
+                                contentEditable={false}
+                                name="safety_quantity"
+                                onChange={handleProductChange}
+                                disabled={!isAdd && _.isEqual(product, Product)}
+                            />
+                            <TextField
+                                InputLabelProps={{ shrink: true }}
+                                value={product.in_transit ?? ""}
+                                label="In Transit Quantity"
+                                margin="normal"
+                                contentEditable={false}
+                                name="in_transit"
+                                onChange={handleProductChange}
+                                disabled={!isAdd && _.isEqual(product, Product)}
+                            />
+                            <TextField
+                                InputLabelProps={{ shrink: true }}
+                                value={product.units ?? ""}
+                                label="Units"
+                                margin="normal"
+                                contentEditable={false}
+                                name="units"
+                                onChange={handleProductChange}
+                                disabled={!isAdd && _.isEqual(product, Product)}
+                            />
+                        </Stack>
+                        <Divider
+                            textAlign="left"
+                            sx={{
+                                color: "black",
+                            }}
+                        >
+                            Pricing
+                        </Divider>
+                        <Stack direction="column">
+                            <Stack direction="row">
+                                <TextField
+                                    InputLabelProps={{ shrink: true }}
+                                    value={
+                                        product.fob_cost !== undefined
+                                            ? product.fob_cost
+                                            : null
+                                    }
+                                    defaultValue={0}
+                                    label="FOB Cost"
+                                    margin="normal"
+                                    contentEditable={false}
+                                    name="fob_cost"
+                                    InputProps={{
+                                        inputComponent: CurrencyInput,
+                                        inputProps: {
+                                            // value: product.fob_cost ?? "",
+                                            prefix: "R",
+                                            defaultValue: 0,
+                                            decimalSeparator: ".",
+                                            decimalScale: 2,
+                                            disableAbbreviations: true,
+                                            placeholder: "R",
+                                            onValueChange: async (
+                                                value: string
+                                            ) => {
+                                                if (value === undefined) {
+                                                    value = "0";
+                                                }
+                                                setProduct({
+                                                    ...product,
+                                                    fob_cost: value,
+                                                });
+                                            },
+                                        },
+                                    }}
+                                    disabled={
+                                        !isAdd && _.isEqual(product, Product)
+                                    }
+                                />
+                                <TextField
+                                    InputLabelProps={{ shrink: true }}
+                                    value={
+                                        product.retail_price !== "undefined"
+                                            ? product.retail_price
+                                            : 0
+                                    }
+                                    label="Retail Price"
+                                    margin="normal"
+                                    contentEditable={false}
+                                    name="retail_price"
+                                    InputProps={{
+                                        inputComponent: CurrencyInput,
+                                        inputProps: {
+                                            // value: product.fob_cost ?? "",
+                                            prefix: "R",
+                                            defaultValue: 0,
+                                            decimalSeparator: ".",
+                                            decimalScale: 2,
+                                            disableAbbreviations: true,
+                                            placeholder: "R",
+                                            onValueChange: async (
+                                                value: string
+                                            ) => {
+                                                if (value === undefined) {
+                                                    value = "0";
+                                                }
+                                                setProduct({
+                                                    ...product,
+                                                    retail_price: value,
+                                                });
+                                            },
+                                        },
+                                    }}
+                                    disabled={
+                                        !isAdd && _.isEqual(product, Product)
+                                    }
+                                />
+                            </Stack>
+                            <Stack direction="row">
+                                <FormGroup>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                name="manual_price"
+                                                checked={product.manual_price}
+                                                onChange={handleCheckboxChange}
+                                            />
+                                        }
+                                        label="Manual Price"
+                                        sx={{ color: "black" }}
+                                    />
+                                </FormGroup>
+                                <Button
+                                    sx={{
+                                        visibility: _.isEqual(
+                                            product.prices,
+                                            pastProduct.prices
+                                        )
+                                            ? "hidden"
+                                            : "visible",
+                                    }}
+                                    onClick={handleResetPrices}
+                                >
+                                    <Replay />
+                                    Reset Prices
+                                </Button>
+                            </Stack>
+                            {product.prices?.map(
+                                (price: ProductPrice, index) => (
+                                    <TextField
+                                        key={index}
+                                        InputLabelProps={{ shrink: true }}
+                                        value={price.price ?? ""}
+                                        label={`${price.level} Price`}
+                                        margin="normal"
+                                        name={`${price.level}`}
+                                        InputProps={{
+                                            inputComponent: CurrencyInput,
+                                            inputProps: {
+                                                prefix: "R",
+                                                defaultValue: 0,
+                                                decimalSeparator: ".",
+                                                decimalScale: 2,
+                                                disableAbbreviations: true,
+                                                placeholder: "R",
+                                                onValueChange: async (
+                                                    value: string
+                                                ) => {
+                                                    let tempPrices = [
+                                                        ...product.prices,
+                                                    ];
+                                                    if (tempPrices) {
+                                                        tempPrices[index] = {
+                                                            ...tempPrices[
+                                                                index
+                                                            ],
+                                                            price: value,
+                                                        };
+                                                        setProduct({
+                                                            ...product,
+                                                            prices: tempPrices,
+                                                        });
+                                                    }
+                                                },
+                                            },
+                                        }}
+                                        disabled={
+                                            (!isAdd &&
+                                                _.isEqual(product, Product)) ||
+                                            !product.manual_price
+                                        }
+                                    />
+                                )
+                            )}
+                        </Stack>
                     </Stack>
-                    <Paper
-                        style={{
-                            margin: "0 0 10px 20px",
-                        }}
-                        sx={{
-                            height: "127px",
-                            width: "30%",
-                        }}
-                    >
-                        <DataGrid
-                            rows={product.supplier_numbers}
-                            columns={supplierColumns}
-                            getRowId={(row) => row.id}
-                            hideFooter={true}
-                            cellModesModel={cellModesModel}
-                            onCellModesModelChange={handleCellModesModelChange}
-                            onCellClick={handleCellClick}
-                            processRowUpdate={(updatedRow) => {
-                                setProduct((_product) => ({
-                                    ..._product,
-                                    supplier_numbers:
-                                        _product.supplier_numbers.map((el) =>
-                                            el.id === updatedRow.id
-                                                ? { ...updatedRow }
-                                                : { ...el }
+
+                    {/* Right stack */}
+                    <Stack direction="column">
+                        {/* Supplier Item Numbers List */}
+                        <Paper
+                            style={{
+                                margin: "0 0 10px 20px",
+                            }}
+                            sx={{
+                                height: "300px",
+                            }}
+                        >
+                            <SingleClickDataGrid
+                                rows={product.supplier_numbers}
+                                columns={suppliersColumns}
+                                processRowUpdate={(updatedRow) => {
+                                    setProduct((_product) => ({
+                                        ..._product,
+                                        supplier_numbers:
+                                            _product.supplier_numbers.map(
+                                                (el) =>
+                                                    el.id === updatedRow.id
+                                                        ? { ...updatedRow }
+                                                        : { ...el }
+                                            ),
+                                    }));
+                                    return updatedRow;
+                                }}
+                                processRowUpdateError={() => {
+                                    setAlertMessage(
+                                        `An error occured while changing the row values.`
+                                    );
+                                    setSeverity("error");
+                                    setAlertVisibility(true);
+                                }}
+                                slots={{
+                                    toolbar: EditToolbar,
+                                }}
+                                slotProps={{
+                                    toolbar: {
+                                        setProduct,
+                                        list: SUPPLIER_NUMBERS,
+                                    },
+                                }}
+                            />
+                        </Paper>
+
+                        {/* Item Locations List */}
+                        <Paper
+                            style={{
+                                margin: "0 0 10px 20px",
+                            }}
+                            sx={{
+                                height: "300px",
+                                // width: "400px",
+                            }}
+                        >
+                            <SingleClickDataGrid
+                                rows={product.locations}
+                                columns={locationsColumns}
+                                processRowUpdate={(updatedRow) => {
+                                    setProduct((_product) => ({
+                                        ..._product,
+                                        locations: _product.locations.map(
+                                            (el) =>
+                                                el.id === updatedRow.id
+                                                    ? {
+                                                          ...updatedRow,
+                                                      }
+                                                    : { ...el }
                                         ),
-                                }));
-                                return updatedRow;
-                            }}
-                            onProcessRowUpdateError={() => {
-                                setAlertMessage(
-                                    `An error occured while changing the row values.`
-                                );
-                                setSeverity("error");
-                                setAlertVisibility(true);
-                            }}
-                        />
-                    </Paper>
-                    <Button
-                        onClick={() => {
-                            console.log(product);
-                        }}
-                    >
-                        Go
-                    </Button>
+                                    }));
+                                    return updatedRow;
+                                }}
+                                processRowUpdateError={() => {
+                                    setAlertMessage(
+                                        `An error occured while changing the row values.`
+                                    );
+                                    setSeverity("error");
+                                    setAlertVisibility(true);
+                                }}
+                                slots={{
+                                    toolbar: EditToolbar,
+                                }}
+                                slotProps={{
+                                    toolbar: { setProduct, list: LOCATIONS },
+                                }}
+                            />
+                        </Paper>
+                    </Stack>
                 </Stack>
 
-                <Divider
-                    textAlign="left"
-                    sx={{
-                        color: "black",
-                    }}
-                >
-                    Vehicle Details
-                </Divider>
-                <TextField
-                    InputLabelProps={{ shrink: true }}
-                    value={product.make ?? ""}
-                    label="Make"
-                    margin="normal"
-                    contentEditable={false}
-                    name="make"
-                    onChange={handleProductChange}
-                    disabled={!isAdd && _.isEqual(product, Product)}
-                />
-                <TextField
-                    InputLabelProps={{ shrink: true }}
-                    value={product.model ?? ""}
-                    label="Model"
-                    margin="normal"
-                    contentEditable={false}
-                    name="model"
-                    onChange={handleProductChange}
-                    disabled={!isAdd && _.isEqual(product, Product)}
-                />
-                <TextField
-                    InputLabelProps={{ shrink: true }}
-                    value={product.year ?? ""}
-                    label="Year"
-                    margin="normal"
-                    contentEditable={false}
-                    name="year"
-                    onChange={handleProductChange}
-                    disabled={!isAdd && _.isEqual(product, Product)}
-                />
-                <Divider
-                    textAlign="left"
-                    sx={{
-                        color: "black",
-                    }}
-                >
-                    Product Details
-                </Divider>
-                <Stack direction="row">
-                    <TextField
-                        InputLabelProps={{ shrink: true }}
-                        value={product.description ?? ""}
-                        label="Description"
-                        margin="normal"
-                        contentEditable={false}
-                        name="description"
-                        onChange={handleProductChange}
-                        disabled={!isAdd && _.isEqual(product, Product)}
-                    />
-                    <TextField
-                        InputLabelProps={{ shrink: true }}
-                        value={product.quantity ?? ""}
-                        label="Quantity"
-                        margin="normal"
-                        contentEditable={false}
-                        name="quantity"
-                        onChange={handleProductChange}
-                        disabled={!isAdd && _.isEqual(product, Product)}
-                    />
-                    <TextField
-                        InputLabelProps={{ shrink: true }}
-                        value={product.safety_quantity ?? ""}
-                        label="Safety Quantity"
-                        margin="normal"
-                        contentEditable={false}
-                        name="safety_quantity"
-                        onChange={handleProductChange}
-                        disabled={!isAdd && _.isEqual(product, Product)}
-                    />
-                    <TextField
-                        InputLabelProps={{ shrink: true }}
-                        value={product.in_transit ?? ""}
-                        label="In Transit Quantity"
-                        margin="normal"
-                        contentEditable={false}
-                        name="in_transit"
-                        onChange={handleProductChange}
-                        disabled={!isAdd && _.isEqual(product, Product)}
-                    />
-                    <TextField
-                        InputLabelProps={{ shrink: true }}
-                        value={product.units ?? ""}
-                        label="Units"
-                        margin="normal"
-                        contentEditable={false}
-                        name="units"
-                        onChange={handleProductChange}
-                        disabled={!isAdd && _.isEqual(product, Product)}
-                    />
-                </Stack>
-                <Divider
-                    textAlign="left"
-                    sx={{
-                        color: "black",
-                    }}
-                >
-                    Pricing
-                </Divider>
-                <Stack direction="column">
-                    <Stack direction="row">
-                        <TextField
-                            InputLabelProps={{ shrink: true }}
-                            value={
-                                product.fob_cost !== undefined
-                                    ? product.fob_cost
-                                    : null
-                            }
-                            defaultValue={0}
-                            label="FOB Cost"
-                            margin="normal"
-                            contentEditable={false}
-                            name="fob_cost"
-                            InputProps={{
-                                inputComponent: CurrencyInput,
-                                inputProps: {
-                                    // value: product.fob_cost ?? "",
-                                    prefix: "R",
-                                    defaultValue: 0,
-                                    decimalSeparator: ".",
-                                    decimalScale: 2,
-                                    disableAbbreviations: true,
-                                    placeholder: "R",
-                                    onValueChange: async (value: string) => {
-                                        if (value === undefined) {
-                                            value = "0";
-                                        }
-                                        setProduct({
-                                            ...product,
-                                            fob_cost: value,
-                                        });
-                                    },
-                                },
-                            }}
-                            disabled={!isAdd && _.isEqual(product, Product)}
-                        />
-                        <TextField
-                            InputLabelProps={{ shrink: true }}
-                            value={
-                                product.retail_price !== "undefined"
-                                    ? product.retail_price
-                                    : 0
-                            }
-                            label="Retail Price"
-                            margin="normal"
-                            contentEditable={false}
-                            name="retail_price"
-                            InputProps={{
-                                inputComponent: CurrencyInput,
-                                inputProps: {
-                                    // value: product.fob_cost ?? "",
-                                    prefix: "R",
-                                    defaultValue: 0,
-                                    decimalSeparator: ".",
-                                    decimalScale: 2,
-                                    disableAbbreviations: true,
-                                    placeholder: "R",
-                                    onValueChange: async (value: string) => {
-                                        if (value === undefined) {
-                                            value = "0";
-                                        }
-                                        setProduct({
-                                            ...product,
-                                            retail_price: value,
-                                        });
-                                    },
-                                },
-                            }}
-                            disabled={!isAdd && _.isEqual(product, Product)}
-                        />
-                    </Stack>
-                    <Stack direction="row">
-                        <FormGroup>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        name="manual_price"
-                                        checked={product.manual_price}
-                                        onChange={handleCheckboxChange}
-                                    />
-                                }
-                                label="Manual Price"
-                                sx={{ color: "black" }}
-                            />
-                        </FormGroup>
-                        <Button
-                            sx={{
-                                visibility: _.isEqual(
-                                    product.prices,
-                                    pastProduct.prices
-                                )
-                                    ? "hidden"
-                                    : "visible",
-                            }}
-                            onClick={handleResetPrices}
-                        >
-                            <Replay />
-                            Reset Prices
-                        </Button>
-                    </Stack>
-                    {product.prices?.map((price: ProductPrice, index) => (
-                        <TextField
-                            key={index}
-                            InputLabelProps={{ shrink: true }}
-                            value={price.price ?? ""}
-                            label={`${price.level} Price`}
-                            margin="normal"
-                            name={`${price.level}`}
-                            InputProps={{
-                                inputComponent: CurrencyInput,
-                                inputProps: {
-                                    prefix: "R",
-                                    defaultValue: 0,
-                                    decimalSeparator: ".",
-                                    decimalScale: 2,
-                                    disableAbbreviations: true,
-                                    placeholder: "R",
-                                    onValueChange: async (value: string) => {
-                                        let tempPrices = [...product.prices];
-                                        if (tempPrices) {
-                                            tempPrices[index] = {
-                                                ...tempPrices[index],
-                                                price: value,
-                                            };
-                                            setProduct({
-                                                ...product,
-                                                prices: tempPrices,
-                                            });
-                                        }
-                                    },
-                                },
-                            }}
-                            disabled={
-                                (!isAdd && _.isEqual(product, Product)) ||
-                                !product.manual_price
-                            }
-                        />
-                    ))}
-                </Stack>
+                {/* Picture viewer */}
                 {_.isEqual(product, Product) ? (
                     <></>
                 ) : (
@@ -742,24 +876,6 @@ export default function Products() {
                                     }}
                                 />
                             </Paper>
-                            {/* <Paper
-                                sx={{
-                                    height: "400px",
-                                    width: "400px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <img
-                                    src="http://localhost/images/products/TY010860FH-1.jpeg"
-                                    style={{
-                                        maxWidth: "100%",
-                                        maxHeight: "100%",
-                                        objectFit: "contain",
-                                    }}
-                                />
-                            </Paper> */}
                         </Carousal>
                     </>
                 )}
