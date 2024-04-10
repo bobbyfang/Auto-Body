@@ -55,6 +55,8 @@ export default function Header({
             .catch((error) => {
                 console.log(error);
             });
+        localStorage.removeItem("expiry");
+        localStorage.removeItem("user");
         setToken("");
     };
 

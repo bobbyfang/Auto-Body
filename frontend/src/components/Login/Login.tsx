@@ -12,11 +12,11 @@ import Container from "@mui/material/Container";
 import axios from "axios";
 
 async function loginUser(credentials: FormData) {
-    const token = await axios
+    const userData = await axios
         .post("http://localhost:8000/auth/login/", credentials)
-        .then((res) => res.data.token)
+        .then((res) => res.data)
         .catch((error) => console.log(error));
-    return token;
+    return userData;
 }
 
 interface Props {
@@ -27,8 +27,10 @@ function Login({ setToken }: Props) {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        const token = await loginUser(data);
-        setToken(token);
+        const userData = await loginUser(data);
+        localStorage.setItem("expiry", userData.expiry);
+        localStorage.setItem("user", JSON.stringify(userData.user));
+        setToken(userData.token);
     };
 
     return (
