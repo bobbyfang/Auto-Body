@@ -554,7 +554,35 @@ export default function Quotes() {
                                 <Grid container justifyContent="flex-end">
                                     {/* Transfer to Order button */}
                                     <Grid item>
-                                        <Button disabled={modifying}>
+                                        <Button
+                                            disabled={modifying}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                axios
+                                                    .post(
+                                                        `http://localhost:8000/api/orders/`,
+                                                        quotation
+                                                    )
+                                                    .then(() => {
+                                                        setAlertMessage(
+                                                            `Quotation ${quotation.reference_number} was transferred to orders.`
+                                                        );
+                                                        setSeverity("success");
+                                                        setAlertVisibility(
+                                                            true
+                                                        );
+                                                    })
+                                                    .catch(() => {
+                                                        setAlertMessage(
+                                                            `Could not transfer quotation ${quotation.reference_number} to orders.`
+                                                        );
+                                                        setSeverity("error");
+                                                        setAlertVisibility(
+                                                            true
+                                                        );
+                                                    });
+                                            }}
+                                        >
                                             <Grading />
                                             Transfer to Order
                                         </Button>
