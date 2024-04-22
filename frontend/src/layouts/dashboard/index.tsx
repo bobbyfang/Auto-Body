@@ -5,6 +5,8 @@ import { useState } from "react";
 import SideDrawer from "../../components/SideDrawer";
 import Customers from "../../components/Customers";
 import Products from "../../components/Products";
+import Quotes from "../../components/Quotations";
+import Orders from "../../components/Orders";
 
 interface Props {
     token: string;
@@ -27,9 +29,9 @@ export default function DashboardLayout({ token, setToken }: Props) {
     const content = (app: string) => {
         switch (app) {
             case "Quotes":
-                return <h1>Quotes</h1>;
+                return <Quotes />;
             case "Orders":
-                return <h1>Orders</h1>;
+                return <Orders />;
             case "Invoices":
                 return <h1>Invoices</h1>;
             case "Customers":
@@ -63,8 +65,10 @@ export default function DashboardLayout({ token, setToken }: Props) {
                     top: "60px",
                     left: "60px",
                     right: "0px",
-                    bottom: "0",
-                    width: "auto",
+                    bottom: "0px",
+                    minHeight: "100",
+                    // height: "auto",
+                    // width: "auto",
                     padding: "20px",
                 }}
             >

@@ -12,16 +12,8 @@ import axios from "axios";
 import { forwardRef } from "react";
 import { useEffect, useState } from "react";
 import { TableVirtuoso } from "react-virtuoso";
-import { Product } from "../Products";
-
-interface Props {
-    open: boolean;
-    setOpen: any;
-    setAlertMessage: any;
-    setAlertVisibility: any;
-    setSeverity: any;
-    setProduct: any;
-}
+import Product from "../Products";
+import { ModalProps } from "../common/ModalProps";
 
 export default function ProductsModal({
     open,
@@ -29,10 +21,11 @@ export default function ProductsModal({
     setAlertMessage,
     setAlertVisibility,
     setSeverity,
-    setProduct,
-}: Props) {
+    setFunction,
+}: ModalProps) {
     const [productsList, setProductsList] = useState([]);
     const [productIndex, setProductIndex] = useState(-1);
+    const setProduct = setFunction;
 
     useEffect(() => {
         if (open) {
@@ -40,7 +33,6 @@ export default function ProductsModal({
                 .get("http://localhost:8000/api/products/")
                 .then((res) => {
                     setProductsList(res.data);
-                    console.log("loaded");
                 })
                 .catch(() => {
                     setAlertMessage(`Could not retrieve the products.`);
