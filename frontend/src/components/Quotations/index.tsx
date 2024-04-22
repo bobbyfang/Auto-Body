@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Content from "../Content";
 import { Box, Button, Divider, Grid, TextField } from "@mui/material";
 import axios, { AxiosResponse } from "axios";
@@ -24,6 +24,8 @@ import { GridInputRowSelectionModel } from "@mui/x-data-grid";
 import { ProductPrice } from "../Products";
 import { User } from "../common/User";
 import UserSelectorModal from "../UserSelectorModal";
+import ConfirmationDialogue from "../ConfirmationDialogue";
+import { AlertContext } from "../../contexts/alertContext";
 
 interface QuotationItem {
     id: number | string;
@@ -48,9 +50,8 @@ interface Quotation {
 }
 
 export default function Quotes() {
-    const [isAlertVisible, setAlertVisibility] = useState(false);
-    const [severity, setSeverity] = useState("");
-    const [alertMessage, setAlertMessage] = useState("");
+    const { setAlertMessage, setAlertVisibility, setAlertSeverity } =
+        useContext(AlertContext);
 
     const [modifying, setModifying] = useState(false);
 
@@ -75,6 +76,11 @@ export default function Quotes() {
         total: 0.0,
         customer: "",
     });
+
+    const [isConfirmationOpen, setConfirmationOpen] = useState(true);
+    const [confirmationMessage, setConfirmationMessage] = useState(
+        "THIS MESSAGE SHOULD SPAN MULTIPLE LINES.THIS MESSAGE SHOULD SPAN MULTIPLE LINES.THIS MESSAGE SHOULD SPAN MULTIPLE LINES."
+    );
 
     const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
     const [customerNumberField, setCustomerNumberField] = useState("");
@@ -134,7 +140,7 @@ export default function Quotes() {
                 setAlertMessage(
                     `Could not retrieve list of quotation reference numbers.`
                 );
-                setSeverity("error");
+                setAlertSeverity("error");
                 setAlertVisibility(true);
             });
     };
@@ -172,7 +178,7 @@ export default function Quotes() {
                 setAlertMessage(
                     `Could not find salesperson with username "${username}".`
                 );
-                setSeverity("error");
+                setAlertSeverity("error");
                 setAlertVisibility(true);
             });
     };
@@ -189,7 +195,7 @@ export default function Quotes() {
                     setAlertMessage(
                         `Could not load quotation with reference number ${referenceNumber}.`
                     );
-                    setSeverity("error");
+                    setAlertSeverity("error");
                     setAlertVisibility(true);
                 });
         }
@@ -222,7 +228,7 @@ export default function Quotes() {
                     setAlertMessage(
                         `Customer with number "${customer_number}" was not found.`
                     );
-                    setSeverity("error");
+                    setAlertSeverity("error");
                     setAlertVisibility(true);
                 });
         }
@@ -270,651 +276,605 @@ export default function Quotes() {
 
     return (
         <>
-            <Content
-                isAlertVisible={isAlertVisible}
+            <ConfirmationDialogue
+                modalProps={{
+                    open: isConfirmationOpen,
+                    setOpen: setConfirmationOpen,
+                    setAlertMessage: setAlertMessage,
+                    setAlertVisibility: setAlertVisibility,
+                    setSeverity: setAlertSeverity,
+                }}
+                message={confirmationMessage}
+                onConfirm={() => {}}
+            />
+            <UserSelectorModal
+                open={isSalesPersonModalOpen}
+                setOpen={setSalesPersonModalOpen}
+                setAlertMessage={setAlertMessage}
                 setAlertVisibility={setAlertVisibility}
-                alertMessage={alertMessage}
-                severity={severity}
+                setSeverity={setAlertVisibility}
+                setFunction={getSalesPerson}
+            />
+            <CustomerSelectorModal
+                open={isCustomerModalOpen}
+                setOpen={setCustomerModalOpen}
+                setAlertMessage={setAlertMessage}
+                setAlertVisibility={setAlertVisibility}
+                setSeverity={setAlertVisibility}
+                setFunction={getCustomer}
+            />
+            <Box
+                sx={{
+                    height: "96%",
+                    backgroundColor: "white",
+                    padding: "20px",
+                }}
             >
-                <UserSelectorModal
-                    open={isSalesPersonModalOpen}
-                    setOpen={setSalesPersonModalOpen}
-                    setAlertMessage={setAlertMessage}
-                    setAlertVisibility={setAlertVisibility}
-                    setSeverity={setAlertVisibility}
-                    setFunction={getSalesPerson}
-                />
-                <CustomerSelectorModal
-                    open={isCustomerModalOpen}
-                    setOpen={setCustomerModalOpen}
-                    setAlertMessage={setAlertMessage}
-                    setAlertVisibility={setAlertVisibility}
-                    setSeverity={setAlertVisibility}
-                    setFunction={getCustomer}
-                />
-                <Box
+                <Grid
+                    container
+                    direction="column"
                     sx={{
-                        height: "96%",
-                        backgroundColor: "white",
-                        padding: "20px",
+                        height: "100%",
+                        width: "100%",
+                        maxHeight: "100%",
+                        maxWidth: "100%",
                     }}
+                    // overflow="auto"
                 >
                     <Grid
                         container
-                        direction="column"
-                        sx={{
-                            height: "100%",
-                            width: "100%",
-                            maxHeight: "100%",
-                            maxWidth: "100%",
-                        }}
-                        // overflow="auto"
+                        sx={{ height: "auto" }}
+                        alignItems="center"
+                        flexDirection="row"
                     >
+                        {/* First button */}
+                        <Grid item>
+                            <Button
+                                onClick={() => {
+                                    setIndex(0);
+                                }}
+                                disabled={modifying}
+                            >
+                                <FirstPage />
+                            </Button>
+                        </Grid>
+                        {/* Previous button */}
+                        <Grid item>
+                            <Button
+                                onClick={() => {
+                                    setIndex(Math.max(0, index - 1));
+                                }}
+                                disabled={modifying}
+                            >
+                                <NavigateBefore />
+                            </Button>
+                        </Grid>
+                        {/* Next button */}
+                        <Grid item>
+                            <Button
+                                onClick={() => {
+                                    setIndex(
+                                        Math.min(
+                                            referenceNumbers.length - 1,
+                                            index + 1
+                                        )
+                                    );
+                                }}
+                                disabled={modifying}
+                            >
+                                <NavigateNext />
+                            </Button>
+                        </Grid>
+                        {/* Last button */}
+                        <Grid item>
+                            <Button
+                                onClick={() => {
+                                    load_reference_numbers_list((res) => {
+                                        setReferenceNumbers(res.data);
+                                        setIndex(res.data.length - 1);
+                                    });
+                                }}
+                                disabled={modifying}
+                            >
+                                <LastPage />
+                            </Button>
+                        </Grid>
+                        {/* Search reference number field */}
+                        <Grid item>
+                            <SearchTextField
+                                value={referenceSearchField}
+                                label="Search"
+                                InputProps={{
+                                    readOnly: modifying,
+                                }}
+                                // onSearchButtonClick={() => {}}
+                            />
+                        </Grid>
+                        {/* New button */}
+                        <Grid item>
+                            <Button
+                                disabled={modifying}
+                                onClick={() => {
+                                    const user_string =
+                                        localStorage.getItem("user");
+                                    const user = JSON.parse(
+                                        user_string ? user_string : ""
+                                    );
+                                    setModifying(true);
+                                    setReferenceNumber("");
+                                    setQuotation({
+                                        reference_number: "",
+                                        items: [],
+                                        amount: 0.0,
+                                        vat: 0.0,
+                                        total: 0.0,
+                                        customer: "",
+                                    });
+                                    setCustomer({ customer_number: "" });
+                                    setCustomerNumberField("");
+                                    setSalesPerson(user);
+                                    setSalesPersonUsernameField(user.username);
+                                    setSelectedIndex(null);
+                                }}
+                            >
+                                <LibraryAdd />
+                                New
+                            </Button>
+                        </Grid>
+                        {/* Modify button */}
+                        <Grid item>
+                            <Button
+                                disabled={modifying}
+                                onClick={() => {
+                                    setModifying(true);
+                                }}
+                            >
+                                <Edit />
+                                Modify
+                            </Button>
+                        </Grid>
+                        {/* Cancel button */}
                         <Grid
-                            container
-                            sx={{ height: "auto" }}
-                            alignItems="center"
-                            flexDirection="row"
+                            item
+                            sx={{
+                                display: modifying ? "block" : "none",
+                            }}
                         >
-                            {/* First button */}
-                            <Grid item>
-                                <Button
-                                    onClick={() => {
-                                        setIndex(0);
-                                    }}
-                                    disabled={modifying}
-                                >
-                                    <FirstPage />
-                                </Button>
-                            </Grid>
-                            {/* Previous button */}
-                            <Grid item>
-                                <Button
-                                    onClick={() => {
-                                        setIndex(Math.max(0, index - 1));
-                                    }}
-                                    disabled={modifying}
-                                >
-                                    <NavigateBefore />
-                                </Button>
-                            </Grid>
-                            {/* Next button */}
-                            <Grid item>
-                                <Button
-                                    onClick={() => {
-                                        setIndex(
-                                            Math.min(
-                                                referenceNumbers.length - 1,
-                                                index + 1
-                                            )
-                                        );
-                                    }}
-                                    disabled={modifying}
-                                >
-                                    <NavigateNext />
-                                </Button>
-                            </Grid>
-                            {/* Last button */}
-                            <Grid item>
-                                <Button
-                                    onClick={() => {
-                                        load_reference_numbers_list((res) => {
-                                            setReferenceNumbers(res.data);
-                                            setIndex(res.data.length - 1);
-                                        });
-                                    }}
-                                    disabled={modifying}
-                                >
-                                    <LastPage />
-                                </Button>
-                            </Grid>
-                            {/* Search reference number field */}
-                            <Grid item>
-                                <SearchTextField
-                                    value={referenceSearchField}
-                                    label="Search"
-                                    InputProps={{
-                                        readOnly: modifying,
-                                    }}
-                                    // onSearchButtonClick={() => {}}
-                                />
-                            </Grid>
-                            {/* New button */}
-                            <Grid item>
-                                <Button
-                                    disabled={modifying}
-                                    onClick={() => {
-                                        const user_string =
-                                            localStorage.getItem("user");
-                                        const user = JSON.parse(
-                                            user_string ? user_string : ""
-                                        );
-                                        setModifying(true);
-                                        setReferenceNumber("");
-                                        setQuotation({
-                                            reference_number: "",
-                                            items: [],
-                                            amount: 0.0,
-                                            vat: 0.0,
-                                            total: 0.0,
-                                            customer: "",
-                                        });
-                                        setCustomer({ customer_number: "" });
-                                        setCustomerNumberField("");
-                                        setSalesPerson(user);
-                                        setSalesPersonUsernameField(
-                                            user.username
-                                        );
-                                        setSelectedIndex(null);
-                                    }}
-                                >
-                                    <LibraryAdd />
-                                    New
-                                </Button>
-                            </Grid>
-                            {/* Modify button */}
-                            <Grid item>
-                                <Button
-                                    disabled={modifying}
-                                    onClick={() => {
-                                        setModifying(true);
-                                    }}
-                                >
-                                    <Edit />
-                                    Modify
-                                </Button>
-                            </Grid>
-                            {/* Cancel button */}
-                            <Grid
-                                item
-                                sx={{
-                                    display: modifying ? "block" : "none",
-                                }}
-                            >
-                                <Button
-                                    onClick={async () => {
-                                        setModifying(false);
-                                        goToReferenceAtIndex();
+                            <Button
+                                onClick={async () => {
+                                    setModifying(false);
+                                    goToReferenceAtIndex();
 
-                                        setQuotation(prevQuotation);
-                                    }}
-                                >
-                                    <Clear />
-                                    Cancel
-                                </Button>
-                            </Grid>
-                            {/* Save button */}
-                            <Grid
-                                item
-                                sx={{
-                                    display: modifying ? "block" : "none",
+                                    setQuotation(prevQuotation);
                                 }}
                             >
-                                <Button
-                                    disabled={!isDirty()}
-                                    onClick={async () => {
-                                        const items = quotation.items?.filter(
-                                            (row) => row.product
-                                        );
-                                        const csrfToken = await axios
-                                            .get(
-                                                "http://localhost:8000/csrf_token/"
-                                            )
-                                            .then(
-                                                (response) =>
-                                                    response.data.csrfToken
-                                            )
-                                            .catch((error) =>
-                                                console.error(error)
-                                            );
-                                        if (referenceNumber) {
-                                            axios
-                                                .put(
-                                                    `http://localhost:8000/api/quotations/${referenceNumber}/`,
-                                                    {
-                                                        ...quotation,
-                                                        items,
-                                                        user: salesPerson.username,
+                                <Clear />
+                                Cancel
+                            </Button>
+                        </Grid>
+                        {/* Save button */}
+                        <Grid
+                            item
+                            sx={{
+                                display: modifying ? "block" : "none",
+                            }}
+                        >
+                            <Button
+                                disabled={!isDirty()}
+                                onClick={async () => {
+                                    const items = quotation.items?.filter(
+                                        (row) => row.product
+                                    );
+                                    const csrfToken = await axios
+                                        .get(
+                                            "http://localhost:8000/csrf_token/"
+                                        )
+                                        .then(
+                                            (response) =>
+                                                response.data.csrfToken
+                                        )
+                                        .catch((error) => console.error(error));
+                                    if (referenceNumber) {
+                                        axios
+                                            .put(
+                                                `http://localhost:8000/api/quotations/${referenceNumber}/`,
+                                                {
+                                                    ...quotation,
+                                                    items,
+                                                    user: salesPerson.username,
+                                                },
+                                                {
+                                                    headers: {
+                                                        "X-CSRFToken":
+                                                            csrfToken,
                                                     },
-                                                    {
-                                                        headers: {
-                                                            "X-CSRFToken":
-                                                                csrfToken,
-                                                        },
-                                                    }
-                                                )
-                                                .then(() => {
-                                                    setModifying(false);
-                                                    setPrevQuotation({
-                                                        ...quotation,
-                                                        items,
-                                                    });
-                                                })
-                                                .catch(() => {
-                                                    setAlertMessage(
-                                                        `Could not update quotation ${referenceNumber}.`
-                                                    );
-                                                    setSeverity("error");
-                                                    setAlertVisibility(true);
+                                                }
+                                            )
+                                            .then(() => {
+                                                setModifying(false);
+                                                setPrevQuotation({
+                                                    ...quotation,
+                                                    items,
                                                 });
-                                        } else {
+                                            })
+                                            .catch(() => {
+                                                setAlertMessage(
+                                                    `Could not update quotation ${referenceNumber}.`
+                                                );
+                                                setAlertSeverity("error");
+                                                setAlertVisibility(true);
+                                            });
+                                    } else {
+                                        axios
+                                            .post(
+                                                `http://localhost:8000/api/quotations/`,
+                                                {
+                                                    ...quotation,
+                                                    items,
+                                                    user: salesPerson.username,
+                                                },
+                                                {
+                                                    headers: {
+                                                        "X-CSRFToken":
+                                                            csrfToken,
+                                                    },
+                                                }
+                                            )
+                                            .then((res) => {
+                                                const newReferenceNumber =
+                                                    res.data.reference_number;
+                                                load_reference_numbers_list(
+                                                    (res) => {
+                                                        setReferenceNumbers(
+                                                            res.data
+                                                        );
+                                                        setIndex(
+                                                            res.data.findIndex(
+                                                                (
+                                                                    quote: Quotation
+                                                                ) =>
+                                                                    quote.reference_number ===
+                                                                    newReferenceNumber
+                                                            )
+                                                        );
+                                                    }
+                                                );
+
+                                                setModifying(false);
+                                            })
+                                            .catch(() => {
+                                                setAlertMessage(
+                                                    `Could not create this new quotation.`
+                                                );
+                                                setAlertSeverity("error");
+                                                setAlertVisibility(true);
+                                            });
+                                    }
+                                }}
+                            >
+                                <Save />
+                                Save
+                            </Button>
+                        </Grid>
+                        <Grid item flexGrow={1}>
+                            <Grid container justifyContent="flex-end">
+                                {/* Transfer to Order button */}
+                                <Grid item>
+                                    <Button
+                                        disabled={modifying}
+                                        onClick={(e) => {
+                                            e.preventDefault();
                                             axios
                                                 .post(
-                                                    `http://localhost:8000/api/quotations/`,
-                                                    {
-                                                        ...quotation,
-                                                        items,
-                                                        user: salesPerson.username,
-                                                    },
-                                                    {
-                                                        headers: {
-                                                            "X-CSRFToken":
-                                                                csrfToken,
-                                                        },
-                                                    }
+                                                    `http://localhost:8000/api/orders/`,
+                                                    quotation
                                                 )
-                                                .then((res) => {
-                                                    const newReferenceNumber =
-                                                        res.data
-                                                            .reference_number;
-                                                    load_reference_numbers_list(
-                                                        (res) => {
-                                                            setReferenceNumbers(
-                                                                res.data
-                                                            );
-                                                            setIndex(
-                                                                res.data.findIndex(
-                                                                    (
-                                                                        quote: Quotation
-                                                                    ) =>
-                                                                        quote.reference_number ===
-                                                                        newReferenceNumber
-                                                                )
-                                                            );
-                                                        }
+                                                .then(() => {
+                                                    setAlertMessage(
+                                                        `Quotation ${quotation.reference_number} was transferred to orders.`
                                                     );
-
-                                                    setModifying(false);
+                                                    setAlertSeverity("success");
+                                                    setAlertVisibility(true);
                                                 })
                                                 .catch(() => {
                                                     setAlertMessage(
-                                                        `Could not create this new quotation.`
+                                                        `Could not transfer quotation ${quotation.reference_number} to orders.`
                                                     );
-                                                    setSeverity("error");
+                                                    setAlertSeverity("error");
                                                     setAlertVisibility(true);
                                                 });
-                                        }
-                                    }}
-                                >
-                                    <Save />
-                                    Save
-                                </Button>
-                            </Grid>
-                            <Grid item flexGrow={1}>
-                                <Grid container justifyContent="flex-end">
-                                    {/* Transfer to Order button */}
-                                    <Grid item>
-                                        <Button
-                                            disabled={modifying}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                axios
-                                                    .post(
-                                                        `http://localhost:8000/api/orders/`,
-                                                        quotation
-                                                    )
-                                                    .then(() => {
-                                                        setAlertMessage(
-                                                            `Quotation ${quotation.reference_number} was transferred to orders.`
-                                                        );
-                                                        setSeverity("success");
-                                                        setAlertVisibility(
-                                                            true
-                                                        );
-                                                    })
-                                                    .catch(() => {
-                                                        setAlertMessage(
-                                                            `Could not transfer quotation ${quotation.reference_number} to orders.`
-                                                        );
-                                                        setSeverity("error");
-                                                        setAlertVisibility(
-                                                            true
-                                                        );
-                                                    });
-                                            }}
-                                        >
-                                            <Grading />
-                                            Transfer to Order
-                                        </Button>
-                                    </Grid>
-                                    {/* Print button */}
-                                    <Grid item>
-                                        <Button disabled={modifying}>
-                                            <Print />
-                                            Print?
-                                        </Button>
-                                    </Grid>
+                                        }}
+                                    >
+                                        <Grading />
+                                        Transfer to Order
+                                    </Button>
+                                </Grid>
+                                {/* Print button */}
+                                <Grid item>
+                                    <Button
+                                        disabled={modifying}
+                                        onClick={() => {
+                                            setConfirmationOpen(true);
+                                        }}
+                                    >
+                                        <Print />
+                                        Print?
+                                    </Button>
                                 </Grid>
                             </Grid>
                         </Grid>
-                        <Divider />
-                        <Grid container direction="row" spacing={2}>
-                            {/* Reference Number and Date fields */}
-                            <Grid item>
-                                <Grid
-                                    container
-                                    direction="column"
-                                    sx={{ width: "auto" }}
-                                >
-                                    {/* Reference Number field */}
-                                    <TextField
-                                        margin="normal"
-                                        InputLabelProps={{ shrink: true }}
-                                        label="Reference Number"
-                                        value={
-                                            quotation.reference_number
-                                                ? quotation.reference_number
-                                                : ""
-                                        }
-                                        InputProps={{
-                                            readOnly: true,
-                                        }}
-                                    />
-                                    {/* Date field */}
-                                    <TextField
-                                        margin="normal"
-                                        InputLabelProps={{ shrink: true }}
-                                        label="Date"
-                                        value={
-                                            quotation.created
-                                                ? new Date(
-                                                      quotation.created
-                                                  ).toDateString()
-                                                : ""
-                                        }
-                                        InputProps={{
-                                            readOnly: true,
-                                        }}
-                                    />
-                                </Grid>
-                            </Grid>
-                            {/* Salesperson Username and Salesperson fields */}
-                            <Grid item>
-                                <Grid
-                                    container
-                                    direction="column"
-                                    sx={{ width: "auto" }}
-                                >
-                                    {/* Salesperson Username */}
-                                    <SearchTextField
-                                        label="Salesperson Username"
-                                        value={salesPersonUsernameField}
-                                        onSearchButtonClick={() => {
-                                            setSalesPersonModalOpen(true);
-                                        }}
-                                        onChange={(event) => {
-                                            setSalesPersonUsernameField(
-                                                event.target.value
-                                            );
-                                        }}
-                                        onKeyUp={(event) => {
-                                            if (
-                                                salesPersonUsernameField &&
-                                                modifying &&
-                                                event.key === "Enter"
-                                            ) {
-                                                getSalesPerson(
-                                                    salesPersonUsernameField
-                                                );
-                                            }
-                                        }}
-                                        InputProps={{
-                                            readOnly: !modifying,
-                                        }}
-                                    />
-                                    {/* Salesperson */}
-                                    <TextField
-                                        margin="normal"
-                                        InputLabelProps={{ shrink: true }}
-                                        label="Salesperson"
-                                        value={
-                                            salesPerson?.first_name &&
-                                            salesPerson?.last_name
-                                                ? `${salesPerson.first_name} ${salesPerson.last_name}`
-                                                : ""
-                                        }
-                                        InputProps={{
-                                            readOnly: true,
-                                        }}
-                                        sx={{ width: "100%" }}
-                                    />
-                                </Grid>
-                            </Grid>
-                            {/* Customer Number and Customer Level fields */}
-                            <Grid item>
-                                <Grid
-                                    container
-                                    direction="column"
-                                    sx={{ width: "auto" }}
-                                >
-                                    {/* Customer Number field */}
-                                    <SearchTextField
-                                        label="Customer Number"
-                                        value={customerNumberField}
-                                        onSearchButtonClick={() => {
-                                            setCustomerModalOpen(true);
-                                        }}
-                                        onChange={(event) => {
-                                            setCustomerNumberField(
-                                                event.target.value.toUpperCase()
-                                            );
-                                        }}
-                                        onKeyUp={(event) => {
-                                            if (
-                                                customerNumberField &&
-                                                modifying &&
-                                                event.key === "Enter"
-                                            ) {
-                                                getCustomer(
-                                                    customerNumberField
-                                                );
-                                            }
-                                        }}
-                                        InputProps={{
-                                            readOnly: !modifying,
-                                        }}
-                                    />
-                                    {/* Customer Level field */}
-                                    <TextField
-                                        margin="normal"
-                                        InputLabelProps={{ shrink: true }}
-                                        label="Customer Level"
-                                        value={
-                                            customer?.customer_level
-                                                ? customer?.customer_level
-                                                : ""
-                                        }
-                                        InputProps={{
-                                            readOnly: true,
-                                        }}
-                                        sx={{ width: "100%" }}
-                                    />
-                                </Grid>
-                            </Grid>
-                            {/* Customer Name and Customer Telephone Number fields */}
-                            <Grid item>
-                                <Grid
-                                    container
-                                    direction="column"
-                                    sx={{ width: "auto" }}
-                                >
-                                    {/* Customer Name field */}
-                                    <TextField
-                                        margin="normal"
-                                        InputLabelProps={{ shrink: true }}
-                                        label="Customer Name"
-                                        value={
-                                            customer?.name ? customer?.name : ""
-                                        }
-                                        InputProps={{
-                                            readOnly: true,
-                                        }}
-                                    />
-                                    {/* Customer Telephone Number field */}
-                                    <TextField
-                                        margin="normal"
-                                        InputLabelProps={{ shrink: true }}
-                                        label="Telephone Number"
-                                        value={
-                                            customer?.telephone_number
-                                                ? customer?.telephone_number
-                                                : ""
-                                        }
-                                        InputProps={{
-                                            readOnly: true,
-                                        }}
-                                    />
-                                </Grid>
-                            </Grid>
-                            {/* Customer Physical Address field */}
-                            <Grid item>
+                    </Grid>
+                    <Divider />
+                    <Grid container direction="row" spacing={2}>
+                        {/* Reference Number and Date fields */}
+                        <Grid item>
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Reference Number field */}
                                 <TextField
                                     margin="normal"
                                     InputLabelProps={{ shrink: true }}
-                                    label="Physical Address"
+                                    label="Reference Number"
                                     value={
-                                        customer?.physical_address
-                                            ? customer?.physical_address
+                                        quotation.reference_number
+                                            ? quotation.reference_number
                                             : ""
                                     }
-                                    multiline
                                     InputProps={{
-                                        style: {
-                                            height: "135px",
-                                        },
+                                        readOnly: true,
+                                    }}
+                                />
+                                {/* Date field */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Date"
+                                    value={
+                                        quotation.created
+                                            ? new Date(
+                                                  quotation.created
+                                              ).toDateString()
+                                            : ""
+                                    }
+                                    InputProps={{
                                         readOnly: true,
                                     }}
                                 />
                             </Grid>
                         </Grid>
-
-                        <Grid item flexGrow={1} width="100%" height={100}>
-                            <SingleClickDataGrid
-                                hideFooter
-                                columns={quotationColumns}
-                                rows={quotation?.items || []}
-                                selectionModel={selectionModel}
-                                selectionModelChange={async (newSelection) => {
-                                    var selectedIndex =
-                                        quotation.items?.findIndex(
-                                            (item) =>
-                                                item.id === newSelection[0]
+                        {/* Salesperson Username and Salesperson fields */}
+                        <Grid item>
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Salesperson Username */}
+                                <SearchTextField
+                                    label="Salesperson Username"
+                                    value={salesPersonUsernameField}
+                                    onSearchButtonClick={() => {
+                                        setSalesPersonModalOpen(true);
+                                    }}
+                                    onChange={(event) => {
+                                        setSalesPersonUsernameField(
+                                            event.target.value
                                         );
-                                    selectedIndex = Math.max(
-                                        0,
-                                        selectedIndex ? selectedIndex : 0
-                                    );
-                                    setSelectedIndex(selectedIndex);
-
-                                    setSelectionModel(
-                                        quotation.items
-                                            ? quotation.items[selectedIndex].id
-                                            : []
-                                    );
+                                    }}
+                                    onKeyUp={(event) => {
+                                        if (
+                                            salesPersonUsernameField &&
+                                            modifying &&
+                                            event.key === "Enter"
+                                        ) {
+                                            getSalesPerson(
+                                                salesPersonUsernameField
+                                            );
+                                        }
+                                    }}
+                                    InputProps={{
+                                        readOnly: !modifying,
+                                    }}
+                                />
+                                {/* Salesperson */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Salesperson"
+                                    value={
+                                        salesPerson?.first_name &&
+                                        salesPerson?.last_name
+                                            ? `${salesPerson.first_name} ${salesPerson.last_name}`
+                                            : ""
+                                    }
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                    sx={{ width: "100%" }}
+                                />
+                            </Grid>
+                        </Grid>
+                        {/* Customer Number and Customer Level fields */}
+                        <Grid item>
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Customer Number field */}
+                                <SearchTextField
+                                    label="Customer Number"
+                                    value={customerNumberField}
+                                    onSearchButtonClick={() => {
+                                        setCustomerModalOpen(true);
+                                    }}
+                                    onChange={(event) => {
+                                        setCustomerNumberField(
+                                            event.target.value.toUpperCase()
+                                        );
+                                    }}
+                                    onKeyUp={(event) => {
+                                        if (
+                                            customerNumberField &&
+                                            modifying &&
+                                            event.key === "Enter"
+                                        ) {
+                                            getCustomer(customerNumberField);
+                                        }
+                                    }}
+                                    InputProps={{
+                                        readOnly: !modifying,
+                                    }}
+                                />
+                                {/* Customer Level field */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Customer Level"
+                                    value={
+                                        customer?.customer_level
+                                            ? customer?.customer_level
+                                            : ""
+                                    }
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                    sx={{ width: "100%" }}
+                                />
+                            </Grid>
+                        </Grid>
+                        {/* Customer Name and Customer Telephone Number fields */}
+                        <Grid item>
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Customer Name field */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Customer Name"
+                                    value={customer?.name ? customer?.name : ""}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                />
+                                {/* Customer Telephone Number field */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Telephone Number"
+                                    value={
+                                        customer?.telephone_number
+                                            ? customer?.telephone_number
+                                            : ""
+                                    }
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
+                        {/* Customer Physical Address field */}
+                        <Grid item>
+                            <TextField
+                                margin="normal"
+                                InputLabelProps={{ shrink: true }}
+                                label="Physical Address"
+                                value={
+                                    customer?.physical_address
+                                        ? customer?.physical_address
+                                        : ""
+                                }
+                                multiline
+                                InputProps={{
+                                    style: {
+                                        height: "135px",
+                                    },
+                                    readOnly: true,
                                 }}
-                                processRowUpdate={async (newRow, oldRow) => {
-                                    if (
-                                        newRow.product !== "" &&
-                                        !_.isEqual(newRow, oldRow)
-                                    ) {
-                                        const quantity = isNaN(newRow.quantity)
-                                            ? oldRow.quantity
-                                            : newRow.quantity;
-                                        if (newRow.product !== oldRow.product) {
-                                            try {
-                                                const product_details =
-                                                    await getProductDetails(
-                                                        newRow.product
-                                                    )
-                                                        .then((res) => res.data)
-                                                        .catch(() => {
-                                                            setAlertMessage(
-                                                                `Could not retrieve product data for ${newRow.product}.`
-                                                            );
-                                                            setSeverity(
-                                                                "error"
-                                                            );
-                                                            setAlertVisibility(
-                                                                true
-                                                            );
-                                                        });
-                                                const priceObject =
-                                                    product_details.prices.filter(
-                                                        (price: ProductPrice) =>
-                                                            price.level ==
-                                                            customer?.customer_level
-                                                    );
-                                                if (priceObject.length > 1) {
-                                                    throw new Error(
-                                                        "More than 1 price."
-                                                    );
-                                                }
-                                                const price = Number(
-                                                    priceObject[0].price
+                            />
+                        </Grid>
+                    </Grid>
+
+                    <Grid item flexGrow={1} width="100%" height={100}>
+                        <SingleClickDataGrid
+                            hideFooter
+                            columns={quotationColumns}
+                            rows={quotation?.items || []}
+                            selectionModel={selectionModel}
+                            selectionModelChange={async (newSelection) => {
+                                var selectedIndex = quotation.items?.findIndex(
+                                    (item) => item.id === newSelection[0]
+                                );
+                                selectedIndex = Math.max(
+                                    0,
+                                    selectedIndex ? selectedIndex : 0
+                                );
+                                setSelectedIndex(selectedIndex);
+
+                                setSelectionModel(
+                                    quotation.items
+                                        ? quotation.items[selectedIndex].id
+                                        : []
+                                );
+                            }}
+                            processRowUpdate={async (newRow, oldRow) => {
+                                if (
+                                    newRow.product !== "" &&
+                                    !_.isEqual(newRow, oldRow)
+                                ) {
+                                    const quantity = isNaN(newRow.quantity)
+                                        ? oldRow.quantity
+                                        : newRow.quantity;
+                                    if (newRow.product !== oldRow.product) {
+                                        try {
+                                            const product_details =
+                                                await getProductDetails(
+                                                    newRow.product
+                                                )
+                                                    .then((res) => res.data)
+                                                    .catch(() => {
+                                                        setAlertMessage(
+                                                            `Could not retrieve product data for ${newRow.product}.`
+                                                        );
+                                                        setAlertSeverity(
+                                                            "error"
+                                                        );
+                                                        setAlertVisibility(
+                                                            true
+                                                        );
+                                                    });
+                                            const priceObject =
+                                                product_details.prices.filter(
+                                                    (price: ProductPrice) =>
+                                                        price.level ==
+                                                        customer?.customer_level
                                                 );
-                                                let subtotal = price * quantity;
-                                                const vat = subtotal * 0.15;
-                                                subtotal += vat;
-                                                const updatedRow = {
-                                                    ...newRow,
-                                                    description: `${product_details.description} ${product_details.model} ${product_details.year}`,
-                                                    price: price,
-                                                    quantity: Number(quantity),
-                                                    vat: vat.toFixed(2),
-                                                    subtotal:
-                                                        subtotal.toFixed(2),
-                                                };
-                                                setQuotation(
-                                                    (prev): Quotation => {
-                                                        const items =
-                                                            prev.items?.map(
-                                                                (row) =>
-                                                                    row.id ===
-                                                                    newRow.id
-                                                                        ? updatedRow
-                                                                        : row
-                                                            );
-                                                        const totals =
-                                                            calculateTotals(
-                                                                items
-                                                            );
-                                                        return {
-                                                            ...prev,
-                                                            // product: product
-                                                            items: items,
-                                                            ...totals,
-                                                        };
-                                                    }
+                                            if (priceObject.length > 1) {
+                                                throw new Error(
+                                                    "More than 1 price."
                                                 );
-                                                return updatedRow;
-                                            } catch {
-                                                return oldRow;
                                             }
-                                        } else {
-                                            const price = isNaN(newRow.price)
-                                                ? Number(oldRow.price)
-                                                : Number(newRow.price);
+                                            const price = Number(
+                                                priceObject[0].price
+                                            );
                                             let subtotal = price * quantity;
                                             const vat = subtotal * 0.15;
                                             subtotal += vat;
                                             const updatedRow = {
                                                 ...newRow,
-                                                price: price.toFixed(2),
+                                                description: `${product_details.description} ${product_details.model} ${product_details.year}`,
+                                                price: price,
                                                 quantity: Number(quantity),
                                                 vat: vat.toFixed(2),
                                                 subtotal: subtotal.toFixed(2),
                                             };
-                                            setQuotation((prev) => {
+                                            setQuotation((prev): Quotation => {
                                                 const items = prev.items?.map(
                                                     (row) =>
                                                         row.id === newRow.id
@@ -925,207 +885,232 @@ export default function Quotes() {
                                                     calculateTotals(items);
                                                 return {
                                                     ...prev,
+                                                    // product: product
                                                     items: items,
                                                     ...totals,
                                                 };
                                             });
                                             return updatedRow;
+                                        } catch {
+                                            return oldRow;
                                         }
                                     } else {
-                                        return oldRow;
+                                        const price = isNaN(newRow.price)
+                                            ? Number(oldRow.price)
+                                            : Number(newRow.price);
+                                        let subtotal = price * quantity;
+                                        const vat = subtotal * 0.15;
+                                        subtotal += vat;
+                                        const updatedRow = {
+                                            ...newRow,
+                                            price: price.toFixed(2),
+                                            quantity: Number(quantity),
+                                            vat: vat.toFixed(2),
+                                            subtotal: subtotal.toFixed(2),
+                                        };
+                                        setQuotation((prev) => {
+                                            const items = prev.items?.map(
+                                                (row) =>
+                                                    row.id === newRow.id
+                                                        ? updatedRow
+                                                        : row
+                                            );
+                                            const totals =
+                                                calculateTotals(items);
+                                            return {
+                                                ...prev,
+                                                items: items,
+                                                ...totals,
+                                            };
+                                        });
+                                        return updatedRow;
                                     }
-                                }}
-                                processRowUpdateError={(error) => {}}
-                            />
-                        </Grid>
-                        <Grid container flexDirection="row">
-                            <Grid item>
-                                <Grid
-                                    container
-                                    spacing={2}
-                                    sx={{ marginTop: "5px" }}
-                                    alignItems="center"
-                                >
-                                    {/* Add button */}
-                                    <Grid item>
-                                        <Button
-                                            disabled={!modifying}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setQuotation(
-                                                    (prev): Quotation => {
-                                                        return {
-                                                            ...prev,
-                                                            items: [
-                                                                ...prev.items,
-                                                                {
-                                                                    id: crypto.randomUUID(),
-                                                                    product: "",
-                                                                    quantity: 0,
-                                                                    price: 0.0,
-                                                                    vat: 0.0,
-                                                                    subtotal: 0.0,
-                                                                    description:
-                                                                        "",
-                                                                },
-                                                            ],
-                                                        };
-                                                    }
+                                } else {
+                                    return oldRow;
+                                }
+                            }}
+                            processRowUpdateError={() => {}}
+                        />
+                    </Grid>
+                    <Grid container flexDirection="row">
+                        <Grid item>
+                            <Grid
+                                container
+                                spacing={2}
+                                sx={{ marginTop: "5px" }}
+                                alignItems="center"
+                            >
+                                {/* Add button */}
+                                <Grid item>
+                                    <Button
+                                        disabled={!modifying}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setQuotation((prev): Quotation => {
+                                                return {
+                                                    ...prev,
+                                                    items: [
+                                                        ...prev.items,
+                                                        {
+                                                            id: crypto.randomUUID(),
+                                                            product: "",
+                                                            quantity: 0,
+                                                            price: 0.0,
+                                                            vat: 0.0,
+                                                            subtotal: 0.0,
+                                                            description: "",
+                                                        },
+                                                    ],
+                                                };
+                                            });
+                                        }}
+                                    >
+                                        Add Item
+                                    </Button>
+                                </Grid>
+                                {/* Insert button */}
+                                <Grid item>
+                                    <Button
+                                        disabled={!modifying}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setQuotation((prev): Quotation => {
+                                                const index = Math.max(
+                                                    prev.items.findIndex(
+                                                        (obj) =>
+                                                            obj.id ===
+                                                            selectionModel
+                                                    ),
+                                                    0
                                                 );
-                                            }}
-                                        >
-                                            Add Item
-                                        </Button>
-                                    </Grid>
-                                    {/* Insert button */}
-                                    <Grid item>
-                                        <Button
-                                            disabled={!modifying}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setQuotation(
-                                                    (prev): Quotation => {
-                                                        const index = Math.max(
-                                                            prev.items.findIndex(
-                                                                (obj) =>
-                                                                    obj.id ===
-                                                                    selectionModel
-                                                            ),
-                                                            0
-                                                        );
 
-                                                        return {
-                                                            ...prev,
-                                                            items: [
-                                                                ...prev.items.slice(
-                                                                    0,
-                                                                    index
-                                                                ),
-                                                                {
-                                                                    id: crypto.randomUUID(),
-                                                                    price: 0,
-                                                                    vat: 0,
-                                                                    subtotal: 0,
-                                                                    quantity: 0,
-                                                                    product: "",
-                                                                    description:
-                                                                        "",
-                                                                },
-                                                                ...prev.items.slice(
-                                                                    index
-                                                                ),
-                                                            ],
-                                                        };
-                                                    }
-                                                );
-                                            }}
-                                        >
-                                            Insert Item
-                                        </Button>
-                                    </Grid>
-                                    {/* Remove button */}
-                                    <Grid item>
-                                        <Button
-                                            disabled={
-                                                _.isEqual(selectionModel, []) ||
-                                                !modifying
+                                                return {
+                                                    ...prev,
+                                                    items: [
+                                                        ...prev.items.slice(
+                                                            0,
+                                                            index
+                                                        ),
+                                                        {
+                                                            id: crypto.randomUUID(),
+                                                            price: 0,
+                                                            vat: 0,
+                                                            subtotal: 0,
+                                                            quantity: 0,
+                                                            product: "",
+                                                            description: "",
+                                                        },
+                                                        ...prev.items.slice(
+                                                            index
+                                                        ),
+                                                    ],
+                                                };
+                                            });
+                                        }}
+                                    >
+                                        Insert Item
+                                    </Button>
+                                </Grid>
+                                {/* Remove button */}
+                                <Grid item>
+                                    <Button
+                                        disabled={
+                                            _.isEqual(selectionModel, []) ||
+                                            !modifying
+                                        }
+                                        onClick={async (e) => {
+                                            e.preventDefault();
+                                            if (selectedIndex !== null) {
+                                                setQuotation((prev) => {
+                                                    const items =
+                                                        prev.items?.filter(
+                                                            (item, index) =>
+                                                                item.id !==
+                                                                selectionModel
+                                                        );
+                                                    const totals =
+                                                        calculateTotals(items);
+                                                    return {
+                                                        ...prev,
+                                                        items: items,
+                                                        ...totals,
+                                                    };
+                                                });
+                                                setSelectionModel([]);
                                             }
-                                            onClick={async (e) => {
-                                                e.preventDefault();
-                                                if (selectedIndex !== null) {
-                                                    setQuotation((prev) => {
-                                                        const items =
-                                                            prev.items?.filter(
-                                                                (item, index) =>
-                                                                    item.id !==
-                                                                    selectionModel
-                                                            );
-                                                        const totals =
-                                                            calculateTotals(
-                                                                items
-                                                            );
-                                                        return {
-                                                            ...prev,
-                                                            items: items,
-                                                            ...totals,
-                                                        };
-                                                    });
-                                                    setSelectionModel([]);
-                                                }
-                                            }}
-                                        >
-                                            Remove Item
-                                        </Button>
-                                    </Grid>
+                                        }}
+                                    >
+                                        Remove Item
+                                    </Button>
                                 </Grid>
                             </Grid>
-                            <Grid item flexGrow={1}>
-                                <Grid
-                                    container
-                                    justifyContent="flex-end"
-                                    spacing={2}
-                                    sx={{ marginTop: "5px" }}
-                                >
-                                    <Grid item>
-                                        <TextField
-                                            value={quotation?.amount}
-                                            label="Amount"
-                                            InputProps={{
-                                                readOnly: true,
-                                                inputComponent: CurrencyInput,
-                                                inputProps: {
-                                                    prefix: "R",
-                                                    defaultValue: 0,
-                                                    decimalSeparator: ".",
-                                                    decimalScale: 2,
-                                                    disableAbbreviations: true,
-                                                    placeholder: "R",
-                                                },
-                                            }}
-                                        />
-                                    </Grid>
-                                    <Grid item>
-                                        <TextField
-                                            value={quotation?.vat}
-                                            label="VAT"
-                                            InputProps={{
-                                                readOnly: true,
-                                                inputComponent: CurrencyInput,
-                                                inputProps: {
-                                                    prefix: "R",
-                                                    defaultValue: 0,
-                                                    decimalSeparator: ".",
-                                                    decimalScale: 2,
-                                                    disableAbbreviations: true,
-                                                    placeholder: "R",
-                                                },
-                                            }}
-                                        />
-                                    </Grid>
-                                    <Grid item>
-                                        <TextField
-                                            value={quotation?.total}
-                                            label="Total"
-                                            InputProps={{
-                                                readOnly: true,
-                                                inputComponent: CurrencyInput,
-                                                inputProps: {
-                                                    prefix: "R",
-                                                    defaultValue: 0,
-                                                    decimalSeparator: ".",
-                                                    decimalScale: 2,
-                                                    disableAbbreviations: true,
-                                                    placeholder: "R",
-                                                },
-                                            }}
-                                        />
-                                    </Grid>
+                        </Grid>
+                        <Grid item flexGrow={1}>
+                            <Grid
+                                container
+                                justifyContent="flex-end"
+                                spacing={2}
+                                sx={{ marginTop: "5px" }}
+                            >
+                                <Grid item>
+                                    <TextField
+                                        value={quotation?.amount}
+                                        label="Amount"
+                                        InputProps={{
+                                            readOnly: true,
+                                            inputComponent: CurrencyInput,
+                                            inputProps: {
+                                                prefix: "R",
+                                                defaultValue: 0,
+                                                decimalSeparator: ".",
+                                                decimalScale: 2,
+                                                disableAbbreviations: true,
+                                                placeholder: "R",
+                                            },
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <TextField
+                                        value={quotation?.vat}
+                                        label="VAT"
+                                        InputProps={{
+                                            readOnly: true,
+                                            inputComponent: CurrencyInput,
+                                            inputProps: {
+                                                prefix: "R",
+                                                defaultValue: 0,
+                                                decimalSeparator: ".",
+                                                decimalScale: 2,
+                                                disableAbbreviations: true,
+                                                placeholder: "R",
+                                            },
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <TextField
+                                        value={quotation?.total}
+                                        label="Total"
+                                        InputProps={{
+                                            readOnly: true,
+                                            inputComponent: CurrencyInput,
+                                            inputProps: {
+                                                prefix: "R",
+                                                defaultValue: 0,
+                                                decimalSeparator: ".",
+                                                decimalScale: 2,
+                                                disableAbbreviations: true,
+                                                placeholder: "R",
+                                            },
+                                        }}
+                                    />
                                 </Grid>
                             </Grid>
                         </Grid>
                     </Grid>
-                </Box>
-            </Content>
+                </Grid>
+            </Box>
         </>
     );
 }

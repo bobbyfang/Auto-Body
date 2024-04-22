@@ -9,9 +9,9 @@ import {
 } from "@mui/material";
 import { Add, Save, KeyboardBackspace, Close } from "@mui/icons-material";
 import axios from "axios";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useState } from "react";
 import _ from "lodash";
-import Content from "../Content";
+import { AlertContext } from "../../contexts/alertContext";
 
 export interface Customer {
     customer_number: string;
@@ -46,9 +46,9 @@ export default function Customers() {
     const [priceLevelsList, setPriceLevelList] = useState([]);
 
     const [isAdd, setAdd] = useState(false);
-    const [isAlertVisible, setAlertVisibility] = useState(false);
-    const [severity, setSeverity] = useState("");
-    const [alertMessage, setAlertMessage] = useState("");
+
+    const { setAlertMessage, setAlertSeverity, setAlertVisibility } =
+        useContext(AlertContext);
 
     useEffect(() => {
         axios
@@ -58,7 +58,7 @@ export default function Customers() {
             })
             .catch(() => {
                 setAlertMessage(`Could not retrieve the customers.`);
-                setSeverity("error");
+                setAlertSeverity("error");
                 setAlertVisibility(true);
             });
     }, []);
@@ -69,7 +69,7 @@ export default function Customers() {
             .then((res) => setPriceLevelList(res.data))
             .catch(() => {
                 setAlertMessage(`Could not retrieve the price levels.`);
-                setSeverity("error");
+                setAlertSeverity("error");
                 setAlertVisibility(true);
             });
     }, []);
@@ -146,14 +146,14 @@ export default function Customers() {
                 setAlertMessage(
                     `Successfully saved or updated ${customerList[customerIndex].name}.`
                 );
-                setSeverity("success");
+                setAlertSeverity("success");
                 setAlertVisibility(true);
             })
             .catch(() => {
                 setAlertMessage(
                     `Could not save or update ${customerList[customerIndex].name}.`
                 );
-                setSeverity("error");
+                setAlertSeverity("error");
                 setAlertVisibility(true);
             });
     };
@@ -167,325 +167,304 @@ export default function Customers() {
 
     return (
         <>
-            <Content
-                isAlertVisible={isAlertVisible}
-                setAlertVisibility={setAlertVisibility}
-                alertMessage={alertMessage}
-                severity={severity}
+            <Box
+                sx={{
+                    backgroundColor: "white",
+                    padding: "20px",
+                }}
             >
-                <Box
-                    sx={{
-                        backgroundColor: "white",
-                        padding: "20px",
-                    }}
-                >
-                    <Stack direction="row" justifyContent="space-between">
-                        <Button
-                            onClick={handleAdd}
-                            disabled={fieldsDirty()}
-                            sx={{
-                                display: isAdd || fieldsDirty() ? "none" : "",
-                            }}
+                <Stack direction="row" justifyContent="space-between">
+                    <Button
+                        onClick={handleAdd}
+                        disabled={fieldsDirty()}
+                        sx={{
+                            display: isAdd || fieldsDirty() ? "none" : "",
+                        }}
+                    >
+                        <Add />
+                        Add
+                    </Button>
+                    <Button
+                        onClick={handleCancel}
+                        sx={{
+                            display: fieldsDirty() && !isAdd ? "" : "none",
+                        }}
+                    >
+                        <Close />
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleBack}
+                        sx={{ display: isAdd ? "" : "none" }}
+                    >
+                        <KeyboardBackspace />
+                        Back
+                    </Button>
+                    <Button
+                        onClick={handleSave}
+                        disabled={!fieldsDirty()}
+                        // sx={{display: fieldsDirty() ? "" : "none"}}
+                    >
+                        <Save /> {isAdd ? "Save" : "Update"}
+                    </Button>
+                </Stack>
+                <Divider />
+                <Stack direction="row">
+                    <FormControl sx={{ width: "48%" }}>
+                        <TextField
+                            select
+                            value={customerIndex}
+                            margin="normal"
+                            onChange={handleCustomerChange}
+                            label="Customer"
+                            placeholder="Select a customer"
+                            disabled={fieldsDirty() || isAdd}
                         >
-                            <Add />
-                            Add
-                        </Button>
-                        <Button
-                            onClick={handleCancel}
-                            sx={{
-                                display: fieldsDirty() && !isAdd ? "" : "none",
-                            }}
-                        >
-                            <Close />
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleBack}
-                            sx={{ display: isAdd ? "" : "none" }}
-                        >
-                            <KeyboardBackspace />
-                            Back
-                        </Button>
-                        <Button
-                            onClick={handleSave}
-                            disabled={!fieldsDirty()}
-                            // sx={{display: fieldsDirty() ? "" : "none"}}
-                        >
-                            <Save /> {isAdd ? "Save" : "Update"}
-                        </Button>
-                    </Stack>
-                    <Divider />
-                    <Stack direction="row">
-                        <FormControl sx={{ width: "48%" }}>
-                            <TextField
-                                select
-                                value={customerIndex}
-                                margin="normal"
-                                onChange={handleCustomerChange}
-                                label="Customer"
-                                placeholder="Select a customer"
-                                disabled={fieldsDirty() || isAdd}
-                            >
-                                {customerList?.map((customerItem, index) => (
-                                    <MenuItem key={index} value={index}>
-                                        {customerItem.name}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                            <TextField
-                                label="Name"
-                                name="name"
-                                InputLabelProps={{ shrink: true }}
-                                value={customerList[customerIndex]?.name}
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="Telephone Number"
-                                name="telephone_number"
-                                InputLabelProps={{ shrink: true }}
-                                value={
-                                    customerList[customerIndex]
-                                        ?.telephone_number
-                                }
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="Fax Number"
-                                name="fax_number"
-                                InputLabelProps={{ shrink: true }}
-                                value={
-                                    customerList[customerIndex]?.fax_number ||
-                                    ""
-                                }
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="Mobile Number"
-                                name="mobile_number"
-                                InputLabelProps={{ shrink: true }}
-                                value={
-                                    customerList[customerIndex]?.mobile_number
-                                }
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="Physical Address"
-                                name="physical_address"
-                                multiline
-                                rows={4}
-                                InputLabelProps={{ shrink: true }}
-                                value={
-                                    customerList[customerIndex]
-                                        ?.physical_address
-                                }
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="Billing Address"
-                                name="billing_address"
-                                multiline
-                                rows={4}
-                                InputLabelProps={{ shrink: true }}
-                                value={
-                                    customerList[customerIndex]?.billing_address
-                                }
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="VAT Number"
-                                name="vat_number"
-                                InputLabelProps={{ shrink: true }}
-                                value={customerList[customerIndex]?.vat_number}
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="CK Number"
-                                name="ck_number"
-                                InputLabelProps={{ shrink: true }}
-                                value={
-                                    customerList[customerIndex]
-                                        ?.company_key_number
-                                }
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <Divider />
-                            <TextField
-                                value={
-                                    customerList[customerIndex]?.customer_level
-                                }
-                                sx={{ display: "none" }}
-                            />
-                            <TextField
-                                select
-                                value={`${customerList[customerIndex]?.customer_level}`}
-                                margin="normal"
-                                onChange={handlePriceLevelChange}
-                                InputLabelProps={{ shrink: true }}
-                                label="Customer Level"
-                                name="customer_level"
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            >
-                                {priceLevelsList?.map(
-                                    (priceLevel: PriceLevel, index) => (
-                                        <MenuItem
-                                            key={index}
-                                            value={priceLevel.level_name}
-                                        >
-                                            {priceLevel.level_name} -{" "}
-                                            {parseFloat(
-                                                priceLevel.markdown_percentage
-                                            ) > 0
-                                                ? `(${priceLevel.markdown_percentage})%`
-                                                : "Original"}
-                                        </MenuItem>
-                                    )
-                                )}
-                            </TextField>
-                            <TextField
-                                label="Credit Limit"
-                                name="credit_limit"
-                                InputLabelProps={{ shrink: true }}
-                                value={
-                                    customerList[customerIndex]?.credit_limit
-                                }
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="Suspend Date"
-                                name="suspend_date"
-                                InputLabelProps={{ shrink: true }}
-                                value={
-                                    customerList[customerIndex]?.suspend_date
-                                }
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="Shipping Instructions"
-                                name="shipping_instructions"
-                                multiline
-                                rows={4}
-                                InputLabelProps={{ shrink: true }}
-                                value={
-                                    customerList[customerIndex]
-                                        ?.shipping_instructions
-                                }
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                            <TextField
-                                label="Memo"
-                                name="memo"
-                                multiline
-                                rows={4}
-                                InputLabelProps={{ shrink: true }}
-                                value={customerList[customerIndex]?.memo}
-                                margin="normal"
-                                onChange={handleChange}
-                                disabled={
-                                    customerList[customerIndex] ? false : true
-                                }
-                            />
-                        </FormControl>
-                        <Divider
-                            orientation="vertical"
-                            flexItem
-                            sx={{ marginX: "20px" }}
+                            {customerList?.map((customerItem, index) => (
+                                <MenuItem key={index} value={index}>
+                                    {customerItem.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                        <TextField
+                            label="Name"
+                            name="name"
+                            InputLabelProps={{ shrink: true }}
+                            value={customerList[customerIndex]?.name}
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
                         />
-                        <Stack
-                            sx={{
-                                width: "48%",
-                                textAlign: "center",
-                            }}
+                        <TextField
+                            label="Telephone Number"
+                            name="telephone_number"
+                            InputLabelProps={{ shrink: true }}
+                            value={
+                                customerList[customerIndex]?.telephone_number
+                            }
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <TextField
+                            label="Fax Number"
+                            name="fax_number"
+                            InputLabelProps={{ shrink: true }}
+                            value={
+                                customerList[customerIndex]?.fax_number || ""
+                            }
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <TextField
+                            label="Mobile Number"
+                            name="mobile_number"
+                            InputLabelProps={{ shrink: true }}
+                            value={customerList[customerIndex]?.mobile_number}
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <TextField
+                            label="Physical Address"
+                            name="physical_address"
+                            multiline
+                            rows={4}
+                            InputLabelProps={{ shrink: true }}
+                            value={
+                                customerList[customerIndex]?.physical_address
+                            }
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <TextField
+                            label="Billing Address"
+                            name="billing_address"
+                            multiline
+                            rows={4}
+                            InputLabelProps={{ shrink: true }}
+                            value={customerList[customerIndex]?.billing_address}
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <TextField
+                            label="VAT Number"
+                            name="vat_number"
+                            InputLabelProps={{ shrink: true }}
+                            value={customerList[customerIndex]?.vat_number}
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <TextField
+                            label="CK Number"
+                            name="ck_number"
+                            InputLabelProps={{ shrink: true }}
+                            value={
+                                customerList[customerIndex]?.company_key_number
+                            }
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <Divider />
+                        <TextField
+                            value={customerList[customerIndex]?.customer_level}
+                            sx={{ display: "none" }}
+                        />
+                        <TextField
+                            select
+                            value={`${customerList[customerIndex]?.customer_level}`}
+                            margin="normal"
+                            onChange={handlePriceLevelChange}
+                            InputLabelProps={{ shrink: true }}
+                            label="Customer Level"
+                            name="customer_level"
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
                         >
-                            {customerList[customerIndex]?.contact_persons?.map(
-                                (
-                                    person: {
-                                        contact_name: string;
-                                        role: string;
-                                    },
-                                    index
-                                ) => (
-                                    <>
-                                        <Stack>
-                                            <TextField
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                                key={"contact_name" + index}
-                                                value={person.contact_name}
-                                                label="Contact Name"
-                                                name="contact_name"
-                                                margin="normal"
-                                                onChange={handleChange}
-                                            />
-                                            <TextField
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                                key={"role" + index}
-                                                value={person.role}
-                                                label="Role"
-                                                name="role"
-                                                margin="normal"
-                                                onChange={handleChange}
-                                            />
-                                            <Divider />
-                                        </Stack>
-                                    </>
+                            {priceLevelsList?.map(
+                                (priceLevel: PriceLevel, index) => (
+                                    <MenuItem
+                                        key={index}
+                                        value={priceLevel.level_name}
+                                    >
+                                        {priceLevel.level_name} -{" "}
+                                        {parseFloat(
+                                            priceLevel.markdown_percentage
+                                        ) > 0
+                                            ? `(${priceLevel.markdown_percentage})%`
+                                            : "Original"}
+                                    </MenuItem>
                                 )
                             )}
-                            <Button sx={{ margin: "normal" }}>
-                                Add Contact Person
-                            </Button>
-                        </Stack>
+                        </TextField>
+                        <TextField
+                            label="Credit Limit"
+                            name="credit_limit"
+                            InputLabelProps={{ shrink: true }}
+                            value={customerList[customerIndex]?.credit_limit}
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <TextField
+                            label="Suspend Date"
+                            name="suspend_date"
+                            InputLabelProps={{ shrink: true }}
+                            value={customerList[customerIndex]?.suspend_date}
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <TextField
+                            label="Shipping Instructions"
+                            name="shipping_instructions"
+                            multiline
+                            rows={4}
+                            InputLabelProps={{ shrink: true }}
+                            value={
+                                customerList[customerIndex]
+                                    ?.shipping_instructions
+                            }
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                        <TextField
+                            label="Memo"
+                            name="memo"
+                            multiline
+                            rows={4}
+                            InputLabelProps={{ shrink: true }}
+                            value={customerList[customerIndex]?.memo}
+                            margin="normal"
+                            onChange={handleChange}
+                            disabled={
+                                customerList[customerIndex] ? false : true
+                            }
+                        />
+                    </FormControl>
+                    <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={{ marginX: "20px" }}
+                    />
+                    <Stack
+                        sx={{
+                            width: "48%",
+                            textAlign: "center",
+                        }}
+                    >
+                        {customerList[customerIndex]?.contact_persons?.map(
+                            (
+                                person: {
+                                    contact_name: string;
+                                    role: string;
+                                },
+                                index
+                            ) => (
+                                <>
+                                    <Stack>
+                                        <TextField
+                                            InputLabelProps={{
+                                                shrink: true,
+                                            }}
+                                            key={"contact_name" + index}
+                                            value={person.contact_name}
+                                            label="Contact Name"
+                                            name="contact_name"
+                                            margin="normal"
+                                            onChange={handleChange}
+                                        />
+                                        <TextField
+                                            InputLabelProps={{
+                                                shrink: true,
+                                            }}
+                                            key={"role" + index}
+                                            value={person.role}
+                                            label="Role"
+                                            name="role"
+                                            margin="normal"
+                                            onChange={handleChange}
+                                        />
+                                        <Divider />
+                                    </Stack>
+                                </>
+                            )
+                        )}
+                        <Button sx={{ margin: "normal" }}>
+                            Add Contact Person
+                        </Button>
                     </Stack>
-                </Box>
-            </Content>
+                </Stack>
+            </Box>
         </>
     );
 }

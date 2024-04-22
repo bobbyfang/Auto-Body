@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Content from "../Content";
 import { Box, Button, Divider, Grid, TextField } from "@mui/material";
 import axios, { AxiosResponse } from "axios";
@@ -23,6 +23,9 @@ import SingleClickDataGrid from "../common/SingleClickDataGrid";
 import { GridInputRowSelectionModel } from "@mui/x-data-grid";
 import { ProductPrice } from "../Products";
 import { User } from "../common/User";
+import ConfirmationDialogue from "../ConfirmationDialogue";
+import UserSelectorModal from "../UserSelectorModal";
+import { AlertContext } from "../../contexts/alertContext";
 
 interface OrderItem {
     id: number | string;
@@ -47,9 +50,14 @@ interface Order {
 }
 
 export default function Quotes() {
-    const [isAlertVisible, setAlertVisibility] = useState(false);
-    const [severity, setSeverity] = useState("");
-    const [alertMessage, setAlertMessage] = useState("");
+    const {
+        alertMessage,
+        setAlertMessage,
+        isAlertVisible,
+        setAlertVisibility,
+        alertSeverity,
+        setAlertSeverity,
+    } = useContext(AlertContext);
 
     const [modifying, setModifying] = useState(false);
 
@@ -129,7 +137,7 @@ export default function Quotes() {
                 setAlertMessage(
                     `Could not retrieve list of order reference numbers.`
                 );
-                setSeverity("error");
+                setAlertSeverity("error");
                 setAlertVisibility(true);
             });
     };
@@ -166,7 +174,7 @@ export default function Quotes() {
                 setAlertMessage(
                     `Could not find salesperson with username "${username}".`
                 );
-                setSeverity("error");
+                setAlertSeverity("error");
                 setAlertVisibility(true);
             });
     };
@@ -183,7 +191,7 @@ export default function Quotes() {
                     setAlertMessage(
                         `Could not load order with reference number ${referenceNumber}.`
                     );
-                    setSeverity("error");
+                    setAlertSeverity("error");
                     setAlertVisibility(true);
                 });
         }
@@ -217,7 +225,7 @@ export default function Quotes() {
                     setAlertMessage(
                         `Customer with number "${customer_number}" was not found.`
                     );
-                    setSeverity("error");
+                    setAlertSeverity("error");
                     setAlertVisibility(true);
                 });
         }
@@ -267,23 +275,23 @@ export default function Quotes() {
                 isAlertVisible={isAlertVisible}
                 setAlertVisibility={setAlertVisibility}
                 alertMessage={alertMessage}
-                severity={severity}
+                severity={alertSeverity}
             >
+                <UserSelectorModal
+                    open={isSalesPersonModalOpen}
+                    setOpen={setSalesPersonModalOpen}
+                    setAlertMessage={setAlertMessage}
+                    setAlertVisibility={setAlertVisibility}
+                    setSeverity={setAlertVisibility}
+                    setFunction={getSalesPerson}
+                />
                 <CustomerSelectorModal
                     open={isCustomerModalOpen}
                     setOpen={setCustomerModalOpen}
                     setAlertMessage={setAlertMessage}
                     setAlertVisibility={setAlertVisibility}
                     setSeverity={setAlertVisibility}
-                    setFunction={undefined}
-                />
-                <CustomerSelectorModal
-                    open={isSalesPersonModalOpen}
-                    setOpen={setSalesPersonModalOpen}
-                    setAlertMessage={setAlertMessage}
-                    setAlertVisibility={setAlertVisibility}
-                    setSeverity={setAlertVisibility}
-                    setFunction={setCustomer}
+                    setFunction={getCustomer}
                 />
                 <Box
                     sx={{
@@ -484,7 +492,7 @@ export default function Quotes() {
                                                     setAlertMessage(
                                                         `Could not update quotation ${referenceNumber}.`
                                                     );
-                                                    setSeverity("error");
+                                                    setAlertSeverity("error");
                                                     setAlertVisibility(true);
                                                 });
                                         } else {
@@ -530,7 +538,7 @@ export default function Quotes() {
                                                     setAlertMessage(
                                                         `Could not create this new quotation.`
                                                     );
-                                                    setSeverity("error");
+                                                    setAlertSeverity("error");
                                                     setAlertVisibility(true);
                                                 });
                                         }
@@ -803,7 +811,7 @@ export default function Quotes() {
                                                             setAlertMessage(
                                                                 `Could not retrieve product data for ${newRow.product}.`
                                                             );
-                                                            setSeverity(
+                                                            setAlertSeverity(
                                                                 "error"
                                                             );
                                                             setAlertVisibility(
