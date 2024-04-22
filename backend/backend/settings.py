@@ -139,7 +139,7 @@ REST_FRAMEWORK = {
 }
 
 REST_KNOX = {
-    "USER_SERIALIZER": "knox.serializers.UserSerializer",
+    "USER_SERIALIZER": "users.serializers.UserSerializer",
     "AUTO_REFRESH": True,
     "AUTH_HEADER_PREFIX": "Bearer",
 }
