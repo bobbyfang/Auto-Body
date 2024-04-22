@@ -123,11 +123,11 @@ export default function Quotes() {
         action: (res: AxiosResponse<any, any>) => any
     ) => {
         axios
-            .get("http://localhost:8000/api/quotations_list")
+            .get("http://localhost:8000/api/orders_list/")
             .then(action)
             .catch(() => {
                 setAlertMessage(
-                    `Could not retrieve list of quotation reference numbers.`
+                    `Could not retrieve list of order reference numbers.`
                 );
                 setSeverity("error");
                 setAlertVisibility(true);
@@ -174,14 +174,14 @@ export default function Quotes() {
     useEffect(() => {
         if (referenceNumber) {
             axios
-                .get(`http://localhost:8000/api/quotations/${referenceNumber}`)
+                .get(`http://localhost:8000/api/orders/${referenceNumber}`)
                 .then((res) => {
                     setPrevQuotation(res.data);
                     getSalesPerson(res.data.user);
                 })
                 .catch(() => {
                     setAlertMessage(
-                        `Could not load quotation with reference number ${referenceNumber}.`
+                        `Could not load order with reference number ${referenceNumber}.`
                     );
                     setSeverity("error");
                     setAlertVisibility(true);
@@ -460,7 +460,7 @@ export default function Quotes() {
                                         if (referenceNumber) {
                                             axios
                                                 .put(
-                                                    `http://localhost:8000/api/quotations/${referenceNumber}/`,
+                                                    `http://localhost:8000/api/orders/${referenceNumber}/`,
                                                     {
                                                         ...quotation,
                                                         items,
@@ -490,7 +490,7 @@ export default function Quotes() {
                                         } else {
                                             axios
                                                 .post(
-                                                    `http://localhost:8000/api/quotations/`,
+                                                    `http://localhost:8000/api/orders/`,
                                                     {
                                                         ...quotation,
                                                         items,

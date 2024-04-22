@@ -181,6 +181,12 @@ class OrderSerializer(serializers.ModelSerializer):
         return instance
 
 
+class OrderListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ["reference_number"]
+
+
 class InvoiceItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceItem
