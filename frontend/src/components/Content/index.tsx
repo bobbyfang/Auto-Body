@@ -29,22 +29,23 @@ export default function Content({
 
     return (
         <>
-            <Box
+            {/* <Box
                 sx={{
                     backgroundColor: "white",
                     padding: "20px",
-                    height: "auto",
+                    minHeight: "auto",
+                    height: "100%",
                 }}
-            >
-                {children}
-                {isAlertVisible && (
-                    <Alert
-                        message={alertMessage}
-                        severity={severity}
-                        onClick={() => setAlertVisibility(false)}
-                    />
-                )}
-            </Box>
+            > */}
+            {children}
+            {isAlertVisible && (
+                <Alert
+                    message={alertMessage}
+                    severity={severity}
+                    onClick={() => setAlertVisibility(false)}
+                />
+            )}
+            {/* </Box> */}
         </>
     );
 }

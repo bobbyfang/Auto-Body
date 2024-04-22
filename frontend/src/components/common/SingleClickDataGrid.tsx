@@ -3,16 +3,42 @@ import {
     GridCellParams,
     GridCellModes,
     DataGrid,
+    GridSlotsComponent,
+    GridColDef,
+    DataGridProps,
+    GridInputRowSelectionModel,
+    GridRowIdGetter,
 } from "@mui/x-data-grid";
+import {
+    GridSlotsComponentsProps,
+    UncapitalizeObjectKeys,
+} from "@mui/x-data-grid/internals";
 import { useCallback, useState } from "react";
 
 export default function SingleClickDataGrid({
     rows,
     columns,
+    getRowId = (row) => row.id,
     processRowUpdate,
     processRowUpdateError,
+    selectionModel,
+    selectionModelChange,
     slots,
     slotProps,
+    hideFooter,
+    props,
+}: {
+    rows?: readonly any[];
+    columns?: readonly GridColDef<any>[];
+    getRowId?: GridRowIdGetter<any>;
+    processRowUpdate?: (newRow: any, oldRow: any) => any;
+    processRowUpdateError?: (error: any) => void;
+    selectionModelChange?: (newValue: any) => void;
+    selectionModel?: GridInputRowSelectionModel;
+    slots?: UncapitalizeObjectKeys<Partial<GridSlotsComponent>> | undefined;
+    slotProps?: GridSlotsComponentsProps | undefined;
+    props?: DataGridProps;
+    hideFooter?: boolean;
 }) {
     const [cellModesModel, setCellModesModel] = useState<GridCellModesModel>(
         {}
@@ -73,18 +99,22 @@ export default function SingleClickDataGrid({
 
     return (
         <DataGrid
+            sx={{ maxHeight: "100%" }}
             rows={rows}
             columns={columns}
-            getRowId={(row) => row.id}
-            hideFooter={true}
+            getRowId={getRowId}
+            hideFooter={hideFooter}
             cellModesModel={cellModesModel}
             onCellModesModelChange={handleCellModesModelchange}
+            rowSelectionModel={selectionModel}
+            onRowSelectionModelChange={selectionModelChange}
             onCellClick={handleCellClick}
             processRowUpdate={processRowUpdate}
             onProcessRowUpdateError={processRowUpdateError}
             slots={slots}
             slotProps={slotProps}
             disableColumnMenu
+            {...props}
         ></DataGrid>
     );
 }
