@@ -23,6 +23,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     inlines = [
         InvoiceItemInline,
     ]
+    readonly_fields = ["invoice_number"]
 
 
 class OrderItemInline(admin.StackedInline):
