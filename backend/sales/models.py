@@ -85,6 +85,7 @@ class OrderItem(models.Model):
 
 class Invoice(ReferenceModel):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    invoice_number = models.IntegerField(editable=False, default=1, unique=True)
 
     total = models.DecimalField(
         default=0.0, decimal_places=2, max_digits=16, editable=False
@@ -99,6 +100,18 @@ class Invoice(ReferenceModel):
 
     def __str__(self):
         return str(self.reference_number)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            last_id = Invoice.objects.all().aggregate(
+                largest=models.Max("invoice_number")
+            )["largest"]
+
+            if last_id is not None:
+                self.invoice_number = last_id + 1
+            else:
+                self.invoice_number = 1
+        return super(Invoice, self).save(*args, **kwargs)
 
 
 class InvoiceItem(models.Model):

@@ -40,12 +40,14 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "knox",
     "rest_framework",
+    "rest_framework_serializer_extensions",
     "corsheaders",
     "customers",
     "suppliers",
     "inventory",
     "sales",
     "authentication",
+    "users",
 ]
 
 MIDDLEWARE = [

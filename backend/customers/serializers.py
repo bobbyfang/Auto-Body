@@ -1,9 +1,10 @@
 from customers.models import Customer, ContactPerson
 
 from rest_framework import serializers
+from rest_framework_serializer_extensions.serializers import SerializerExtensionsMixin
 
 
-class ContactPersonSerializer(serializers.ModelSerializer):
+class ContactPersonSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = serializers.IntegerField()
 
     class Meta:
@@ -11,9 +12,7 @@ class ContactPersonSerializer(serializers.ModelSerializer):
         fields = ["id", "contact_name", "role", "email", "customer"]
 
 
-class CustomerSerializer(serializers.ModelSerializer):
-    contact_persons = ContactPersonSerializer(many=True)
-
+class CustomerSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = [
@@ -32,8 +31,10 @@ class CustomerSerializer(serializers.ModelSerializer):
             "shipping_instructions",
             "suspend",
             "suspend_date",
-            "contact_persons",
         ]
+        expandable_fields = {
+            "contact_persons": {"serializer": ContactPersonSerializer, "many": True}
+        }
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get("name", instance.name)
