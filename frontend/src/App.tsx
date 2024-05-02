@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { ReactNode, useState } from "react";
 import "./App.css";
 
 import Login from "./components/Login/Login";
@@ -7,6 +7,9 @@ import useToken from "./hooks/useToken";
 import DashboardLayout from "./layouts/dashboard";
 import Alert from "./components/common/Alert";
 import { AlertContext } from "./contexts/alertContext";
+import ConfirmationDialogue from "./components/ConfirmationDialogue";
+import { ConfirmationContext } from "./contexts/confirmationContext";
+import useConfirmation from "./hooks/useConfirmation";
 
 function App() {
     const { token, setToken } = useToken();
@@ -19,17 +22,14 @@ function App() {
         setAlertSeverity,
     } = useAlert();
 
-    useEffect(() => {
-        if (isAlertVisible) {
-            const timer = setTimeout(() => {
-                setAlertVisibility(false);
-            }, 5000);
-
-            return () => {
-                clearTimeout(timer);
-            };
-        }
-    }, [isAlertVisible]);
+    const {
+        isConfirmationOpen,
+        setConfirmationOpen,
+        confirmationMessage,
+        setConfirmationMessage,
+        onConfirm,
+        setOnConfirm,
+    } = useConfirmation();
 
     if (!token) {
         return (
@@ -47,14 +47,32 @@ function App() {
                     setAlertVisibility: setAlertVisibility,
                 }}
             >
-                {isAlertVisible && (
-                    <Alert
-                        message={alertMessage}
-                        severity={alertSeverity}
-                        onClick={() => setAlertVisibility(false)}
-                    />
-                )}
-                <DashboardLayout token={token} setToken={setToken} />
+                <ConfirmationContext.Provider
+                    value={{
+                        setConfirmationMessage: setConfirmationMessage,
+                        setConfirmationOpen: setConfirmationOpen,
+                        setOnConfirm: setOnConfirm,
+                    }}
+                >
+                    {isAlertVisible && (
+                        <Alert
+                            message={alertMessage}
+                            severity={alertSeverity}
+                            onClick={() => setAlertVisibility(false)}
+                        />
+                    )}
+                    {isConfirmationOpen && (
+                        <ConfirmationDialogue
+                            modalProps={{
+                                open: isConfirmationOpen,
+                                setOpen: setConfirmationOpen,
+                            }}
+                            message={confirmationMessage}
+                            onConfirm={onConfirm}
+                        />
+                    )}
+                    <DashboardLayout token={token} setToken={setToken} />
+                </ConfirmationContext.Provider>
             </AlertContext.Provider>
         </>
     );
