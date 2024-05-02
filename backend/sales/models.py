@@ -132,3 +132,59 @@ class InvoiceItem(models.Model):
 
     def __str__(self):
         return str(self.product.product_number)
+
+
+class CreditNote(ReferenceModel):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    credit_number = models.IntegerField(editable=False, default=1, unique=True)
+    invoice_number = models.ForeignKey(
+        Invoice, on_delete=models.CASCADE, to_field="invoice_number"
+    )
+
+    total = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    amount = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    vat = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    memo = models.TextField(default="", blank=True)
+
+    def __str__(self):
+        return str(self.reference_number)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            last_id = CreditNote.objects.all().aggregate(
+                largest=models.Max("credit_number")
+            )["largest"]
+
+            if last_id is not None:
+                self.credit_number = last_id + 1
+            else:
+                self.credit_number = 1
+        return super(CreditNote, self).save(*args, **kwargs)
+
+
+class CreditNoteItem(models.Model):
+    credit_note = models.ForeignKey(
+        CreditNote, on_delete=models.CASCADE, related_name="items"
+    )
+
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+
+    price = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    vat = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    subtotal = models.DecimalField(
+        default=0.0, decimal_places=2, max_digits=16, editable=False
+    )
+    quantity = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return str(self.product.product_number)
