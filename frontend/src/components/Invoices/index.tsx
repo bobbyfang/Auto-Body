@@ -1,35 +1,33 @@
-import { useContext, useEffect, useState } from "react";
-import Content from "../Content";
-import { Box, Button, Divider, Grid, TextField } from "@mui/material";
-import axios, { AxiosResponse } from "axios";
 import {
-    Clear,
-    Edit,
     FirstPage,
-    Grading,
-    LastPage,
-    LibraryAdd,
     NavigateBefore,
     NavigateNext,
-    Print,
+    LastPage,
+    LibraryAdd,
+    Edit,
+    Clear,
     Save,
+    Grading,
+    Print,
+    PlaylistAddCheck,
 } from "@mui/icons-material";
-import SearchTextField from "../common/SearchTextField";
-import CustomerSelectorModal from "../CustomerSelectorModal";
-import { Customer } from "../Customers";
-import CurrencyInput from "react-currency-input-field";
-import _ from "lodash";
-import SingleClickDataGrid from "../common/SingleClickDataGrid";
+import { Box, Grid, Button, Divider, TextField } from "@mui/material";
 import { GridInputRowSelectionModel } from "@mui/x-data-grid";
-import { ProductPrice } from "../Products";
-import { User } from "../common/User";
-import ConfirmationDialogue from "../ConfirmationDialogue";
-import UserSelectorModal from "../UserSelectorModal";
+import axios, { AxiosResponse } from "axios";
+import _ from "lodash";
+import { useContext, useState, useEffect } from "react";
+import CurrencyInput from "react-currency-input-field";
 import { AlertContext } from "../../contexts/alertContext";
+import SearchTextField from "../common/SearchTextField";
+import SingleClickDataGrid from "../common/SingleClickDataGrid";
+import CustomerSelectorModal from "../CustomerSelectorModal";
+import { ProductPrice } from "../Products";
+import UserSelectorModal from "../UserSelectorModal";
+import OrderSelectorModal from "../OrderSelectorModal";
 import useCustomer from "../../hooks/useCustomer";
 import useUser from "../../hooks/useUser";
 
-interface OrderItem {
+export interface InvoiceItem {
     id: number | string;
     price: number;
     vat: number;
@@ -39,9 +37,9 @@ interface OrderItem {
     description: string;
 }
 
-export interface Order {
+export interface Invoice {
     reference_number: string;
-    items: OrderItem[];
+    items: InvoiceItem[];
     created?: string;
     amount: number;
     vat: number;
@@ -51,7 +49,7 @@ export interface Order {
     customer: string;
 }
 
-export default function Quotes() {
+export default function Invoices() {
     const { setAlertMessage, setAlertVisibility, setAlertSeverity } =
         useContext(AlertContext);
 
@@ -59,10 +57,10 @@ export default function Quotes() {
 
     const [referenceSearchField, setReferenceSearchField] = useState("");
 
-    const [referenceNumbers, setReferenceNumbers] = useState<Order[]>([]);
-    const [index, setIndex] = useState<number>(0);
+    const [referenceNumbers, setReferenceNumbers] = useState<Invoice[]>([]);
+    const [index, setIndex] = useState<number>(-1);
     const [referenceNumber, setReferenceNumber] = useState("");
-    const [prevOrder, setPrevOrder] = useState<Order>({
+    const [prevInvoice, setPrevInvoice] = useState<Invoice>({
         reference_number: "",
         items: [],
         amount: 0.0,
@@ -71,7 +69,7 @@ export default function Quotes() {
         customer: "",
         user: "",
     });
-    const [order, setOrder] = useState<Order>({
+    const [invoice, setInvoice] = useState<Invoice>({
         reference_number: "",
         items: [],
         amount: 0.0,
@@ -85,10 +83,12 @@ export default function Quotes() {
     const [customerNumberField, setCustomerNumberField] = useState("");
     const { customer, setCustomer } = useCustomer();
 
-    const [isSalesPersonModalOpen, setSalesPersonModalOpen] = useState(false);
-    const [salesPersonUsernameField, setSalespersonUsernameField] =
+    const [isSalespersonModalOpen, setSalespersonModalOpen] = useState(false);
+    const [salespersonUsernameField, setSalespersonUsernameField] =
         useState("");
     const { user, setUser } = useUser();
+
+    const [isOrderSelectModalOpen, setOrderSelectModalOpen] = useState(false);
 
     const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
     const [selectionModel, setSelectionModel] =
@@ -133,11 +133,11 @@ export default function Quotes() {
         action: (res: AxiosResponse<any, any>) => any
     ) => {
         axios
-            .get("http://localhost:8000/api/orders/?only=reference_number")
+            .get("http://localhost:8000/api/invoices/?only=reference_number")
             .then(action)
             .catch(() => {
                 setAlertMessage(
-                    `Could not retrieve list of order reference numbers.`
+                    `Could not retrieve list of invoice reference numbers.`
                 );
                 setAlertSeverity("error");
                 setAlertVisibility(true);
@@ -146,15 +146,19 @@ export default function Quotes() {
 
     useEffect(() => {
         load_reference_numbers_list((res) => {
-            const orders = res.data;
-            setReferenceNumbers(orders);
-            setIndex(orders.length - 1);
+            const invoices = res.data;
+            setReferenceNumbers(invoices);
+            setIndex(invoices.length - 1);
         });
     }, []);
 
     const goToReferenceAtIndex = () => {
         if (referenceNumbers.length) {
-            setReferenceNumber(referenceNumbers[index].reference_number);
+            setReferenceNumber(
+                referenceNumbers[index].reference_number
+                    ? referenceNumbers[index].reference_number
+                    : ""
+            );
         }
     };
 
@@ -166,11 +170,11 @@ export default function Quotes() {
         if (referenceNumber) {
             axios
                 .get(
-                    `http://localhost:8000/api/orders/${referenceNumber}/?expand=items,user`
+                    `http://localhost:8000/api/invoices/${referenceNumber}/?expand=items,user`
                 )
                 .then((res) => {
-                    const order = res.data;
-                    setPrevOrder({ ...order, user: order.user.username });
+                    const invoice = res.data;
+                    setPrevInvoice({ ...invoice, user: invoice.user.username });
                 })
                 .catch(() => {
                     setAlertMessage(
@@ -183,22 +187,22 @@ export default function Quotes() {
     }, [referenceNumber]);
 
     useEffect(() => {
-        setOrder(prevOrder);
-        setCustomer(prevOrder.customer);
-        setUser(prevOrder.user);
+        setInvoice(prevInvoice);
+        setCustomer(prevInvoice.customer);
+        setUser(prevInvoice.user);
         setSelectionModel([]);
-    }, [prevOrder]);
+    }, [prevInvoice]);
 
     useEffect(() => {
         setCustomerNumberField(customer.customer_number);
-        setOrder((prev): Order => {
+        setInvoice((prev): Invoice => {
             return { ...prev, customer: customer.customer_number };
         });
     }, [customer]);
 
     useEffect(() => {
         setSalespersonUsernameField(user.username);
-        setOrder((prev): Order => {
+        setInvoice((prev): Invoice => {
             return { ...prev, user: user.username };
         });
     }, [user]);
@@ -218,7 +222,7 @@ export default function Quotes() {
         return a;
     };
 
-    const calculateTotals = (items: OrderItem[]) => {
+    const calculateTotals = (items: InvoiceItem[]) => {
         return items.reduce(
             (prev, cur) => {
                 return {
@@ -233,9 +237,26 @@ export default function Quotes() {
 
     return (
         <>
+            <OrderSelectorModal
+                open={isOrderSelectModalOpen}
+                setOpen={setOrderSelectModalOpen}
+                setFunction={(reference_number: string) => {
+                    axios
+                        .get(
+                            `http://localhost:8000/api/orders/${reference_number}/?expand=items,user`
+                        )
+                        .then((res) => {
+                            setInvoice({ ...res.data, reference_number: "" });
+                            setCustomer(res.data.customer);
+                            setUser(res.data.user.username);
+                            setModifying(true);
+                        })
+                        .catch();
+                }}
+            />
             <UserSelectorModal
-                open={isSalesPersonModalOpen}
-                setOpen={setSalesPersonModalOpen}
+                open={isSalespersonModalOpen}
+                setOpen={setSalespersonModalOpen}
                 setFunction={setUser}
             />
             <CustomerSelectorModal
@@ -343,10 +364,7 @@ export default function Quotes() {
 
                                     setModifying(true);
                                     setReferenceNumber("");
-                                    setCustomer("");
-                                    setUser(user.username);
-                                    setSelectedIndex(null);
-                                    setOrder({
+                                    setInvoice({
                                         reference_number: "",
                                         items: [],
                                         amount: 0.0,
@@ -355,10 +373,29 @@ export default function Quotes() {
                                         customer: "",
                                         user: user.username,
                                     });
+                                    setCustomer("");
+                                    setCustomerNumberField("");
+                                    setUser(user.username);
+                                    setSalespersonUsernameField(user.username);
+                                    setSelectedIndex(null);
                                 }}
                             >
                                 <LibraryAdd />
                                 New
+                            </Button>
+                        </Grid>
+                        {/* From Order button */}
+                        <Grid item>
+                            <Button
+                                disabled={modifying}
+                                onClick={() => {
+                                    setReferenceNumber("");
+                                    setSelectedIndex(null);
+                                    setOrderSelectModalOpen(true);
+                                }}
+                            >
+                                <PlaylistAddCheck />
+                                From Order
                             </Button>
                         </Grid>
                         {/* Modify button */}
@@ -385,7 +422,7 @@ export default function Quotes() {
                                     setModifying(false);
                                     goToReferenceAtIndex();
 
-                                    setOrder(prevOrder);
+                                    setInvoice(prevInvoice);
                                 }}
                             >
                                 <Clear />
@@ -401,7 +438,7 @@ export default function Quotes() {
                         >
                             <Button
                                 onClick={async () => {
-                                    const items = order.items?.filter(
+                                    const items = invoice.items?.filter(
                                         (row) => row.product
                                     );
                                     const csrfToken = await axios
@@ -416,9 +453,9 @@ export default function Quotes() {
                                     if (referenceNumber) {
                                         axios
                                             .put(
-                                                `http://localhost:8000/api/orders/${referenceNumber}/`,
+                                                `http://localhost:8000/api/invoices/${referenceNumber}/?expand=items`,
                                                 {
-                                                    ...order,
+                                                    ...invoice,
                                                     user: user.id,
                                                 },
                                                 {
@@ -430,8 +467,8 @@ export default function Quotes() {
                                             )
                                             .then(() => {
                                                 setModifying(false);
-                                                setPrevOrder({
-                                                    ...order,
+                                                setPrevInvoice({
+                                                    ...invoice,
                                                     items,
                                                 });
                                             })
@@ -445,9 +482,9 @@ export default function Quotes() {
                                     } else {
                                         axios
                                             .post(
-                                                `http://localhost:8000/api/orders/`,
+                                                `http://localhost:8000/api/invoices/?expand=items`,
                                                 {
-                                                    ...order,
+                                                    ...invoice,
                                                     user: user.id,
                                                 },
                                                 {
@@ -468,7 +505,7 @@ export default function Quotes() {
                                                         setIndex(
                                                             res.data.findIndex(
                                                                 (
-                                                                    quote: Order
+                                                                    quote: Invoice
                                                                 ) =>
                                                                     quote.reference_number ===
                                                                     newReferenceNumber
@@ -481,7 +518,7 @@ export default function Quotes() {
                                             })
                                             .catch(() => {
                                                 setAlertMessage(
-                                                    `Could not create this new quotation.`
+                                                    `Could not create this new invoice.`
                                                 );
                                                 setAlertSeverity("error");
                                                 setAlertVisibility(true);
@@ -495,6 +532,13 @@ export default function Quotes() {
                         </Grid>
                         <Grid item flexGrow={1}>
                             <Grid container justifyContent="flex-end">
+                                {/* Transfer to Order button */}
+                                <Grid item>
+                                    <Button disabled={modifying}>
+                                        <Grading />
+                                        Transfer to Order
+                                    </Button>
+                                </Grid>
                                 {/* Print button */}
                                 <Grid item>
                                     <Button disabled={modifying}>
@@ -520,8 +564,8 @@ export default function Quotes() {
                                     InputLabelProps={{ shrink: true }}
                                     label="Reference Number"
                                     value={
-                                        order.reference_number
-                                            ? order.reference_number
+                                        invoice.reference_number
+                                            ? invoice.reference_number
                                             : ""
                                     }
                                     InputProps={{
@@ -534,9 +578,9 @@ export default function Quotes() {
                                     InputLabelProps={{ shrink: true }}
                                     label="Date"
                                     value={
-                                        order.created
+                                        invoice.created
                                             ? new Date(
-                                                  order.created
+                                                  invoice.created
                                               ).toDateString()
                                             : ""
                                     }
@@ -556,9 +600,9 @@ export default function Quotes() {
                                 {/* Salesperson Username */}
                                 <SearchTextField
                                     label="Salesperson Username"
-                                    value={salesPersonUsernameField}
+                                    value={salespersonUsernameField}
                                     onSearchButtonClick={() => {
-                                        setSalesPersonModalOpen(true);
+                                        setSalespersonModalOpen(true);
                                     }}
                                     onChange={(event) => {
                                         setSalespersonUsernameField(
@@ -567,11 +611,11 @@ export default function Quotes() {
                                     }}
                                     onKeyUp={(event) => {
                                         if (
-                                            salesPersonUsernameField &&
+                                            salespersonUsernameField &&
                                             modifying &&
                                             event.key === "Enter"
                                         ) {
-                                            setUser(salesPersonUsernameField);
+                                            setUser(salespersonUsernameField);
                                         }
                                     }}
                                     InputProps={{
@@ -703,10 +747,10 @@ export default function Quotes() {
                         <SingleClickDataGrid
                             hideFooter
                             columns={quotationColumns}
-                            rows={order?.items || []}
+                            rows={invoice?.items || []}
                             selectionModel={selectionModel}
                             selectionModelChange={async (newSelection) => {
-                                var selectedIndex = order.items?.findIndex(
+                                var selectedIndex = invoice.items?.findIndex(
                                     (item) => item.id === newSelection[0]
                                 );
                                 selectedIndex = Math.max(
@@ -716,8 +760,8 @@ export default function Quotes() {
                                 setSelectedIndex(selectedIndex);
 
                                 setSelectionModel(
-                                    order.items
-                                        ? order.items[selectedIndex].id
+                                    invoice.items
+                                        ? invoice.items[selectedIndex].id
                                         : []
                                 );
                             }}
@@ -772,7 +816,7 @@ export default function Quotes() {
                                                 vat: vat.toFixed(2),
                                                 subtotal: subtotal.toFixed(2),
                                             };
-                                            setOrder((prev): Order => {
+                                            setInvoice((prev): Invoice => {
                                                 const items = prev.items?.map(
                                                     (row) =>
                                                         row.id === newRow.id
@@ -806,7 +850,7 @@ export default function Quotes() {
                                             vat: vat.toFixed(2),
                                             subtotal: subtotal.toFixed(2),
                                         };
-                                        setOrder((prev) => {
+                                        setInvoice((prev) => {
                                             const items = prev.items?.map(
                                                 (row) =>
                                                     row.id === newRow.id
@@ -844,7 +888,7 @@ export default function Quotes() {
                                         disabled={!modifying}
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            setOrder((prev): Order => {
+                                            setInvoice((prev): Invoice => {
                                                 return {
                                                     ...prev,
                                                     items: [
@@ -872,7 +916,7 @@ export default function Quotes() {
                                         disabled={!modifying}
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            setOrder((prev): Order => {
+                                            setInvoice((prev): Invoice => {
                                                 const index = Math.max(
                                                     prev.items.findIndex(
                                                         (obj) =>
@@ -919,7 +963,7 @@ export default function Quotes() {
                                         onClick={async (e) => {
                                             e.preventDefault();
                                             if (selectedIndex !== null) {
-                                                setOrder((prev) => {
+                                                setInvoice((prev) => {
                                                     const items =
                                                         prev.items?.filter(
                                                             (item, index) =>
@@ -952,7 +996,7 @@ export default function Quotes() {
                             >
                                 <Grid item>
                                     <TextField
-                                        value={order?.amount}
+                                        value={invoice?.amount}
                                         label="Amount"
                                         InputProps={{
                                             readOnly: true,
@@ -970,7 +1014,7 @@ export default function Quotes() {
                                 </Grid>
                                 <Grid item>
                                     <TextField
-                                        value={order?.vat}
+                                        value={invoice?.vat}
                                         label="VAT"
                                         InputProps={{
                                             readOnly: true,
@@ -988,7 +1032,7 @@ export default function Quotes() {
                                 </Grid>
                                 <Grid item>
                                     <TextField
-                                        value={order?.total}
+                                        value={invoice?.total}
                                         label="Total"
                                         InputProps={{
                                             readOnly: true,
