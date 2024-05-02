@@ -9,20 +9,20 @@ import {
     TableRow,
 } from "@mui/material";
 import axios from "axios";
-import { forwardRef } from "react";
+import { forwardRef, useContext } from "react";
 import { useEffect, useState } from "react";
 import { TableVirtuoso } from "react-virtuoso";
 import Product from "../Products";
 import { ModalProps } from "../common/ModalProps";
+import { AlertContext } from "../../contexts/alertContext";
 
 export default function ProductsModal({
     open,
     setOpen,
-    setAlertMessage,
-    setAlertVisibility,
-    setSeverity,
     setFunction,
 }: ModalProps) {
+    const { setAlertMessage, setAlertSeverity, setAlertVisibility } =
+        useContext(AlertContext);
     const [productsList, setProductsList] = useState([]);
     const [productIndex, setProductIndex] = useState(-1);
     const setProduct = setFunction;
@@ -36,7 +36,7 @@ export default function ProductsModal({
                 })
                 .catch(() => {
                     setAlertMessage(`Could not retrieve the products.`);
-                    setSeverity("error");
+                    setAlertSeverity("error");
                     setAlertVisibility(true);
                 });
         }

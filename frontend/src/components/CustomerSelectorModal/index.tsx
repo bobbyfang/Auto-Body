@@ -1,21 +1,21 @@
 import { Close, Done } from "@mui/icons-material";
 import { Modal, Box, Button, Grid } from "@mui/material";
 import { ModalProps } from "../common/ModalProps";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Customer } from "../Customers";
 import axios from "axios";
 import SingleClickDataGrid from "../common/SingleClickDataGrid";
 import { GridInputRowSelectionModel } from "@mui/x-data-grid";
 import _ from "lodash";
+import { AlertContext } from "../../contexts/alertContext";
 
 export default function CustomerSelectorModal({
     open,
     setOpen,
-    setAlertMessage,
-    setAlertVisibility,
-    setSeverity,
     setFunction,
 }: ModalProps) {
+    const { setAlertMessage, setAlertVisibility, setAlertSeverity } =
+        useContext(AlertContext);
     const setCustomer = setFunction;
     const [customers, setCustomers] = useState<Customer[]>([]);
 
@@ -45,7 +45,7 @@ export default function CustomerSelectorModal({
                 })
                 .catch(() => {
                     setAlertMessage("Could not load the list of customers.");
-                    setSeverity("error");
+                    setAlertSeverity("error");
                     setAlertVisibility(true);
                 });
         }

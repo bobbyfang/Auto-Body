@@ -1,21 +1,21 @@
 import { Close, Done } from "@mui/icons-material";
 import { Modal, Box, Button, Grid } from "@mui/material";
 import { ModalProps } from "../common/ModalProps";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import SingleClickDataGrid from "../common/SingleClickDataGrid";
 import { GridColDef, GridInputRowSelectionModel } from "@mui/x-data-grid";
 import _ from "lodash";
 import { User } from "../common/User";
+import { AlertContext } from "../../contexts/alertContext";
 
 export default function UserSelectorModal({
     open,
     setOpen,
-    setAlertMessage,
-    setAlertVisibility,
-    setSeverity,
     setFunction,
 }: ModalProps) {
+    const { setAlertMessage, setAlertVisibility, setAlertSeverity } =
+        useContext(AlertContext);
     const setUser = setFunction;
     const [users, setUsers] = useState<User[]>([]);
 
@@ -49,7 +49,7 @@ export default function UserSelectorModal({
                 })
                 .catch(() => {
                     setAlertMessage("Could not load the list of users.");
-                    setSeverity("error");
+                    setAlertSeverity("error");
                     setAlertVisibility(true);
                 });
         }
@@ -73,7 +73,7 @@ export default function UserSelectorModal({
                         padding: 4,
                     }}
                 >
-                    <Grid container flexDirection="column" height="auto">
+                    <Grid container flexDirection="column" height="100%">
                         <Grid container justifyContent="space-between">
                             <Grid item>
                                 <Button onClick={() => setOpen(false)}>
