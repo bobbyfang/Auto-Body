@@ -8,8 +8,8 @@ import DashboardLayout from "./layouts/dashboard";
 import Alert from "./components/common/Alert";
 import { AlertContext } from "./contexts/alertContext";
 import ConfirmationDialogue from "./components/ConfirmationDialogue";
-import { ConfirmationContext } from "./contexts/confirmationContext";
 import useConfirmation from "./hooks/useConfirmation";
+import { ConfirmationContext } from "./contexts/confirmationContext";
 
 function App() {
     const { token, setToken } = useToken();

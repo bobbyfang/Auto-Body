@@ -24,9 +24,10 @@ import UserSelectorModal from "../UserSelectorModal";
 import { AlertContext } from "../../contexts/alertContext";
 import useCustomer from "../../hooks/useCustomer";
 import useUser from "../../hooks/useUser";
-import { ConfirmationContext } from "../../contexts/confirmationContext";
 import TransferQuotationModal from "../TransferQuotationModal";
 import { ReferenceContext } from "../../contexts/referenceContext";
+import { ConfirmationContext } from "../../contexts/confirmationContext";
+// import { ConfirmationContext } from "../../contexts/confirmationContext";
 
 export interface QuotationItem {
     id: number | string;
@@ -251,27 +252,17 @@ export default function Quotes() {
                 <UserSelectorModal
                     open={isSalespersonModalOpen}
                     setOpen={setSalespersonModalOpen}
-                    setAlertMessage={setAlertMessage}
-                    setAlertVisibility={setAlertVisibility}
-                    setSeverity={setAlertVisibility}
                     setFunction={setUser}
                 />
                 <CustomerSelectorModal
                     open={isCustomerModalOpen}
                     setOpen={setCustomerModalOpen}
-                    setAlertMessage={setAlertMessage}
-                    setAlertVisibility={setAlertVisibility}
-                    setSeverity={setAlertVisibility}
                     setFunction={setCustomer}
                 />
                 <TransferQuotationModal
-                    quotation={quotation}
                     ModalProps={{
                         open: isTransferQuotationOpen,
                         setOpen: setTransferQuotationOpen,
-                        setAlertMessage: setAlertMessage,
-                        setAlertVisibility: setAlertVisibility,
-                        setSeverity: setAlertSeverity,
                     }}
                 />
 
