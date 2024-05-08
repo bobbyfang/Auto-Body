@@ -4,6 +4,8 @@ from rest_framework_serializer_extensions.serializers import SerializerExtension
 from customers.serializers import CustomerSerializer
 from users.serializers import UserSerializer
 from sales.models import (
+    CreditNote,
+    CreditNoteItem,
     Quotation,
     QuotationItem,
     Order,
@@ -186,6 +188,112 @@ class OrderSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
         return instance
 
 
+class CreditNoteItemSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    class Meta:
+        model = CreditNoteItem
+        exclude = ["credit_note"]
+
+    id = serializers.CharField()
+    description = serializers.SerializerMethodField()
+    price = serializers.DecimalField(max_digits=16, decimal_places=2)
+    vat = serializers.DecimalField(max_digits=16, decimal_places=2)
+    subtotal = serializers.DecimalField(max_digits=16, decimal_places=2)
+
+    def create(self, *args, **kwargs):
+        invoice_item = CreditNoteItem.objects.create(*args, **kwargs)
+
+        return invoice_item
+
+    def get_description(self, obj):
+        return product_description(obj)
+
+
+class CreditNoteSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    class Meta:
+        model = CreditNote
+        fields = "__all__"
+        expandable_fields = {
+            "items": {"serializer": CreditNoteItemSerializer, "many": True},
+            "user": {
+                "serializer": UserSerializer,
+                "id_source": False,
+            },
+            "customer": {"serializer": CustomerSerializer, "id_source": False},
+        }
+
+    amount = serializers.DecimalField(max_digits=16, decimal_places=2)
+    vat = serializers.DecimalField(max_digits=16, decimal_places=2)
+    total = serializers.DecimalField(max_digits=16, decimal_places=2)
+
+    def create(self, validated_data):
+        items = validated_data.pop("items")
+
+        credit_note = CreditNote.objects.create(**validated_data)
+
+        for item in items:
+            try:
+                item.pop("id")
+            except KeyError:
+                print("Credit note item does not have id field.")
+            finally:
+                CreditNoteItem.objects.create(credit_note=credit_note, **item)
+
+        credit_note.save()
+        return credit_note
+
+    def update(self, instance, validated_data):
+        instance.user = validated_data.get("user", instance.user)
+        instance.customer = validated_data.get("customer", instance.customer)
+
+        instance.amount = validated_data.get("amount", instance.amount)
+        instance.vat = validated_data.get("vat", instance.vat)
+        instance.total = validated_data.get("total", instance.total)
+
+        instance.memo = validated_data.get("memo", instance.memo)
+
+        items = validated_data.get("items")
+
+        item_ids = map(lambda item: item.get("id"), items)
+        item_ids = list(filter(lambda id: id.isnumeric(), item_ids))
+        removed_rows = instance.items.exclude(id__in=item_ids)
+        for removed_row in removed_rows:
+            product_instance = Product.objects.get(product_number=removed_row.product)
+            product_instance.quantity -= removed_row.quantity
+            product_instance.save()
+        removed_rows.delete()
+
+        for item in items:
+            item_id = item.get("id")
+            try:
+                item_id = int(item_id)
+                credit_note_item_instance = CreditNoteItem.objects.get(id=item_id)
+                old_quantity = credit_note_item_instance.quantity
+
+                CreditNoteItemSerializer().update(credit_note_item_instance, item)
+
+                product_number = item.pop("product")
+                new_quantity = item.pop("quantity")
+                quantity_difference = new_quantity - old_quantity
+
+                product_instance = Product.objects.get(product_number=product_number)
+                product_instance.quantity += quantity_difference
+                product_instance.save()
+
+            except (TypeError, ValueError, CreditNoteItem.DoesNotExist):
+                item.pop("id")
+                CreditNoteItemSerializer().create(**item, credit_note=instance)
+
+                product_number = item.pop("product")
+                new_quantity = item.pop("quantity")
+
+                product_instance = Product.objects.get(product_number=product_number)
+                product_instance.quantity += new_quantity
+                product_instance.save()
+
+        instance.save()
+        return instance
+
+
 class InvoiceItemSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     class Meta:
         model = InvoiceItem
@@ -217,6 +325,7 @@ class InvoiceSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
                 "id_source": False,
             },
             "customer": {"serializer": CustomerSerializer, "id_source": False},
+            "creditnote_set": {"serializer": CreditNoteSerializer, "many": True},
         }
 
     amount = serializers.DecimalField(max_digits=16, decimal_places=2)
@@ -277,7 +386,7 @@ class InvoiceSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
                 product_instance.quantity -= quantity_difference
                 product_instance.save()
 
-            except (TypeError, ValueError, OrderItem.DoesNotExist):
+            except (TypeError, ValueError, InvoiceItem.DoesNotExist):
                 item.pop("id")
                 InvoiceItemSerializer().create(**item, invoice=instance)
 

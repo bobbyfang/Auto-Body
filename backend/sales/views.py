@@ -8,8 +8,9 @@ from rest_framework import viewsets
 
 from rest_framework_serializer_extensions.views import SerializerExtensionsAPIViewMixin
 
-from sales.models import Quotation, Order, Invoice
+from sales.models import CreditNote, Quotation, Order, Invoice
 from sales.serializers import (
+    CreditNoteSerializer,
     QuotationSerializer,
     QuotationItemSerializer,
     OrderSerializer,
@@ -36,3 +37,9 @@ class InvoicesViewSet(SerializerExtensionsAPIViewMixin, viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
+
+
+class CreditNotesViewSet(SerializerExtensionsAPIViewMixin, viewsets.ModelViewSet):
+    # permission_classes = [IsAuthenticated]
+    queryset = CreditNote.objects.all()
+    serializer_class = CreditNoteSerializer

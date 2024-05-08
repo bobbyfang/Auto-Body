@@ -2,6 +2,7 @@ from django.contrib import admin
 
 
 from sales.models import (
+    CreditNote,
     Invoice,
     InvoiceItem,
     Order,
@@ -52,6 +53,11 @@ class QuotationAdmin(admin.ModelAdmin):
     ]
 
 
+class CreditNoteAdmin(admin.ModelAdmin):
+    pass
+
+
 admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Quotation, QuotationAdmin)
+admin.site.register(CreditNote, CreditNoteAdmin)
