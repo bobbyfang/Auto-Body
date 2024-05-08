@@ -47,6 +47,7 @@ export interface Invoice {
     memo?: string;
     user: string;
     customer: string;
+    invoice_number: string;
 }
 
 export default function Invoices() {
@@ -68,6 +69,7 @@ export default function Invoices() {
         total: 0.0,
         customer: "",
         user: "",
+        invoice_number: "",
     });
     const [invoice, setInvoice] = useState<Invoice>({
         reference_number: "",
@@ -77,6 +79,7 @@ export default function Invoices() {
         total: 0.0,
         customer: "",
         user: "",
+        invoice_number: "",
     });
 
     const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
@@ -372,6 +375,7 @@ export default function Invoices() {
                                         total: 0.0,
                                         customer: "",
                                         user: user.username,
+                                        invoice_number: "",
                                     });
                                     setCustomer("");
                                     setCustomerNumberField("");
@@ -582,6 +586,29 @@ export default function Invoices() {
                                             ? new Date(
                                                   invoice.created
                                               ).toDateString()
+                                            : ""
+                                    }
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
+                        {/* Invoice Number field */}
+                        <Grid item>
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Invoice Number field */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Invoice Number"
+                                    value={
+                                        invoice.invoice_number
+                                            ? invoice.invoice_number
                                             : ""
                                     }
                                     InputProps={{
