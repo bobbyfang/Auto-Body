@@ -88,7 +88,7 @@ export default function Quotes() {
     const [isSalesPersonModalOpen, setSalesPersonModalOpen] = useState(false);
     const [salesPersonUsernameField, setSalespersonUsernameField] =
         useState("");
-    const { user, setUser } = useUser();
+    const [user, setUser] = useUser();
 
     const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
     const [selectionModel, setSelectionModel] =
@@ -219,7 +219,7 @@ export default function Quotes() {
     };
 
     const calculateTotals = (items: OrderItem[]) => {
-        return items.reduce(
+        const totals = items.reduce(
             (prev, cur) => {
                 return {
                     amount: prev.amount + Number(cur.price) * cur.quantity,
@@ -229,6 +229,11 @@ export default function Quotes() {
             },
             { amount: 0.0, vat: 0.0, total: 0.0 }
         );
+        return {
+            amount: totals.amount.toFixed(2),
+            vat: totals.amount.toFixed(2),
+            total: totals.total.toFixed(2),
+        };
     };
 
     return (

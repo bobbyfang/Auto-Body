@@ -8,6 +8,7 @@ import Products from "../../components/Products";
 import Quotes from "../../components/Quotations";
 import Orders from "../../components/Orders";
 import Invoices from "../../components/Invoices";
+import CreditNotes from "../../components/CreditNotes";
 
 interface Props {
     token: string;
@@ -35,6 +36,8 @@ export default function DashboardLayout({ token, setToken }: Props) {
                 return <Orders />;
             case "Invoices":
                 return <Invoices />;
+            case "Credit Notes":
+                return <CreditNotes />;
             case "Customers":
                 return <Customers />;
             case "Products":

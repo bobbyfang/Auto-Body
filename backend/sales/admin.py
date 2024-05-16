@@ -3,6 +3,7 @@ from django.contrib import admin
 
 from sales.models import (
     CreditNote,
+    CreditNoteItem,
     Invoice,
     InvoiceItem,
     Order,
@@ -53,8 +54,17 @@ class QuotationAdmin(admin.ModelAdmin):
     ]
 
 
+class CreditNoteItemInline(admin.StackedInline):
+    model = CreditNoteItem
+    classes = ["collapse"]
+    extra = 0
+    readonly_fields = ["price", "vat", "subtotal"]
+
+
 class CreditNoteAdmin(admin.ModelAdmin):
-    pass
+    inlines = [
+        CreditNoteItemInline,
+    ]
 
 
 admin.site.register(Invoice, InvoiceAdmin)

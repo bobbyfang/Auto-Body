@@ -1,1 +1,1 @@
-export const drawerItems = ["Quotes", "Orders", "Invoices"];
+export const drawerItems = ["Quotes", "Orders", "Invoices", "Credit Notes"];

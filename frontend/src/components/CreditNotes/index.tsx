@@ -26,9 +26,9 @@ import UserSelectorModal from "../UserSelectorModal";
 import OrderSelectorModal from "../OrderSelectorModal";
 import useCustomer from "../../hooks/useCustomer";
 import useUser from "../../hooks/useUser";
-import { CreditNote } from "../CreditNotes";
+import { Invoice } from "../Invoices";
 
-export interface InvoiceItem {
+export interface CreditNoteItem {
     id: number | string;
     price: number;
     vat: number;
@@ -38,9 +38,9 @@ export interface InvoiceItem {
     description: string;
 }
 
-export interface Invoice {
+export interface CreditNote {
     reference_number: string;
-    items: InvoiceItem[];
+    items: CreditNoteItem[];
     created?: string;
     amount: number;
     vat: number;
@@ -48,11 +48,11 @@ export interface Invoice {
     memo?: string;
     user: string;
     customer: string;
+    credit_number: string;
     invoice_number: string;
-    creditnote_set?: CreditNote[];
 }
 
-export default function Invoices() {
+export default function CreditNotes() {
     const { setAlertMessage, setAlertVisibility, setAlertSeverity } =
         useContext(AlertContext);
 
@@ -60,10 +60,10 @@ export default function Invoices() {
 
     const [referenceSearchField, setReferenceSearchField] = useState("");
 
-    const [referenceNumbers, setReferenceNumbers] = useState<Invoice[]>([]);
+    const [referenceNumbers, setReferenceNumbers] = useState<CreditNote[]>([]);
     const [index, setIndex] = useState<number>(-1);
     const [referenceNumber, setReferenceNumber] = useState("");
-    const [prevInvoice, setPrevInvoice] = useState<Invoice>({
+    const [prevCreditNote, setPrevCreditNote] = useState<CreditNote>({
         reference_number: "",
         items: [],
         amount: 0.0,
@@ -71,9 +71,10 @@ export default function Invoices() {
         total: 0.0,
         customer: "",
         user: "",
+        credit_number: "",
         invoice_number: "",
     });
-    const [invoice, setInvoice] = useState<Invoice>({
+    const [creditNote, setCreditNote] = useState<CreditNote>({
         reference_number: "",
         items: [],
         amount: 0.0,
@@ -81,6 +82,7 @@ export default function Invoices() {
         total: 0.0,
         customer: "",
         user: "",
+        credit_number: "",
         invoice_number: "",
     });
 
@@ -92,6 +94,20 @@ export default function Invoices() {
     const [salespersonUsernameField, setSalespersonUsernameField] =
         useState("");
     const [user, setUser] = useUser();
+
+    const [invoice, setInvoice] = useState<Invoice>({
+        reference_number: "",
+        items: [],
+        amount: 0.0,
+        vat: 0.0,
+        total: 0.0,
+        customer: "",
+        user: "",
+        invoice_number: "",
+    });
+    const [invoiceUser, setInvoiceUser] = useUser();
+
+    const [items, setItems] = useState<{ [index: string]: any }>({});
 
     const [isOrderSelectModalOpen, setOrderSelectModalOpen] = useState(false);
 
@@ -138,11 +154,13 @@ export default function Invoices() {
         action: (res: AxiosResponse<any, any>) => any
     ) => {
         axios
-            .get("http://localhost:8000/api/invoices/?only=reference_number")
+            .get(
+                "http://localhost:8000/api/credit_notes/?only=reference_number"
+            )
             .then(action)
             .catch(() => {
                 setAlertMessage(
-                    `Could not retrieve list of invoice reference numbers.`
+                    `Could not retrieve list of credit note reference numbers.`
                 );
                 setAlertSeverity("error");
                 setAlertVisibility(true);
@@ -151,9 +169,9 @@ export default function Invoices() {
 
     useEffect(() => {
         load_reference_numbers_list((res) => {
-            const invoices = res.data;
-            setReferenceNumbers(invoices);
-            setIndex(invoices.length - 1);
+            const credit_notes = res.data;
+            setReferenceNumbers(credit_notes);
+            setIndex(credit_notes.length - 1);
         });
     }, []);
 
@@ -172,18 +190,21 @@ export default function Invoices() {
     }, [index]);
 
     useEffect(() => {
-        if (referenceNumber) {
+        if (!_.isEqual(referenceNumber, "")) {
             axios
                 .get(
-                    `http://localhost:8000/api/invoices/${referenceNumber}/?expand=items,user`
+                    `http://localhost:8000/api/credit_notes/${referenceNumber}/?expand=items,user`
                 )
                 .then((res) => {
-                    const invoice = res.data;
-                    setPrevInvoice({ ...invoice, user: invoice.user.username });
+                    const credit_note = res.data;
+                    setPrevCreditNote({
+                        ...credit_note,
+                        user: credit_note.user.username,
+                    });
                 })
                 .catch(() => {
                     setAlertMessage(
-                        `Could not load order with reference number ${referenceNumber}.`
+                        `Could not load credit note with reference number ${referenceNumber}.`
                     );
                     setAlertSeverity("error");
                     setAlertVisibility(true);
@@ -192,22 +213,78 @@ export default function Invoices() {
     }, [referenceNumber]);
 
     useEffect(() => {
-        setInvoice(prevInvoice);
-        setCustomer(prevInvoice.customer);
-        setUser(prevInvoice.user);
-        setSelectionModel([]);
-    }, [prevInvoice]);
+        if (prevCreditNote.invoice_number) {
+            setCreditNote(prevCreditNote);
+            setCustomer(prevCreditNote.customer);
+            setUser(prevCreditNote.user);
+            axios
+                .get(
+                    `http://localhost:8000/api/invoices/${prevCreditNote.invoice_number}/?expand=user,creditnote_set__items,items`
+                )
+                .then((res) => {
+                    setInvoice({ ...res.data, user: res.data.user.username });
+                })
+                .catch(() => {});
+            setSelectionModel([]);
+        }
+    }, [prevCreditNote]);
+
+    useEffect(() => {
+        setInvoiceUser(invoice.user);
+        var items: {
+            [index: string]: {
+                quantity: number;
+                price: number;
+                description: string;
+            };
+        } = {};
+        for (const _item of invoice.items) {
+            if (!(_item.product in items)) {
+                items[_item.product] = {
+                    quantity: Number(_item.quantity),
+                    price: Number(_item.price),
+                    description: _item.description,
+                };
+            } else {
+                const item = items[_item.product];
+                items[_item.product] = {
+                    quantity: item.quantity + _item.quantity,
+                    price: Math.max(item.price, _item.price),
+                    description: _item.description,
+                };
+            }
+        }
+        if (invoice.creditnote_set) {
+            for (const _credit_note of invoice.creditnote_set) {
+                if (
+                    _credit_note.reference_number !==
+                    creditNote.reference_number
+                ) {
+                    for (const _item of _credit_note.items) {
+                        if (_item.product in items) {
+                            const item = items[_item.product];
+                            items[_item.product] = {
+                                ...item,
+                                quantity: item.quantity - _item.quantity,
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        setItems(items);
+    }, [invoice]);
 
     useEffect(() => {
         setCustomerNumberField(customer.customer_number);
-        setInvoice((prev): Invoice => {
+        setCreditNote((prev): CreditNote => {
             return { ...prev, customer: customer.customer_number };
         });
     }, [customer]);
 
     useEffect(() => {
         setSalespersonUsernameField(user.username);
-        setInvoice((prev): Invoice => {
+        setCreditNote((prev): CreditNote => {
             return { ...prev, user: user.username };
         });
     }, [user]);
@@ -227,7 +304,7 @@ export default function Invoices() {
         return a;
     };
 
-    const calculateTotals = (items: InvoiceItem[]) => {
+    const calculateTotals = (items: CreditNoteItem[]) => {
         const totals = items.reduce(
             (prev, cur) => {
                 return {
@@ -239,9 +316,9 @@ export default function Invoices() {
             { amount: 0.0, vat: 0.0, total: 0.0 }
         );
         return {
-            amount: totals.amount.toFixed(2),
-            vat: totals.amount.toFixed(2),
-            total: totals.total.toFixed(2),
+            amount: Number(totals.amount.toFixed(2)),
+            vat: Number(totals.amount.toFixed(2)),
+            total: Number(totals.total.toFixed(2)),
         };
     };
 
@@ -256,7 +333,10 @@ export default function Invoices() {
                             `http://localhost:8000/api/orders/${reference_number}/?expand=items,user`
                         )
                         .then((res) => {
-                            setInvoice({ ...res.data, reference_number: "" });
+                            setCreditNote({
+                                ...res.data,
+                                reference_number: "",
+                            });
                             setCustomer(res.data.customer);
                             setUser(res.data.user.username);
                             setModifying(true);
@@ -374,7 +454,7 @@ export default function Invoices() {
 
                                     setModifying(true);
                                     setReferenceNumber("");
-                                    setInvoice({
+                                    setCreditNote({
                                         reference_number: "",
                                         items: [],
                                         amount: 0.0,
@@ -382,6 +462,7 @@ export default function Invoices() {
                                         total: 0.0,
                                         customer: "",
                                         user: user.username,
+                                        credit_number: "",
                                         invoice_number: "",
                                     });
                                     setCustomer("");
@@ -433,7 +514,7 @@ export default function Invoices() {
                                     setModifying(false);
                                     goToReferenceAtIndex();
 
-                                    setInvoice(prevInvoice);
+                                    setCreditNote(prevCreditNote);
                                 }}
                             >
                                 <Clear />
@@ -449,7 +530,7 @@ export default function Invoices() {
                         >
                             <Button
                                 onClick={async () => {
-                                    const items = invoice.items?.filter(
+                                    const items = creditNote.items?.filter(
                                         (row) => row.product
                                     );
                                     const csrfToken = await axios
@@ -466,7 +547,7 @@ export default function Invoices() {
                                             .put(
                                                 `http://localhost:8000/api/invoices/${referenceNumber}/?expand=items`,
                                                 {
-                                                    ...invoice,
+                                                    ...creditNote,
                                                     user: user.id,
                                                 },
                                                 {
@@ -478,8 +559,8 @@ export default function Invoices() {
                                             )
                                             .then(() => {
                                                 setModifying(false);
-                                                setPrevInvoice({
-                                                    ...invoice,
+                                                setPrevCreditNote({
+                                                    ...creditNote,
                                                     items,
                                                 });
                                             })
@@ -495,7 +576,7 @@ export default function Invoices() {
                                             .post(
                                                 `http://localhost:8000/api/invoices/?expand=items`,
                                                 {
-                                                    ...invoice,
+                                                    ...creditNote,
                                                     user: user.id,
                                                 },
                                                 {
@@ -516,7 +597,7 @@ export default function Invoices() {
                                                         setIndex(
                                                             res.data.findIndex(
                                                                 (
-                                                                    quote: Invoice
+                                                                    quote: CreditNote
                                                                 ) =>
                                                                     quote.reference_number ===
                                                                     newReferenceNumber
@@ -560,9 +641,11 @@ export default function Invoices() {
                             </Grid>
                         </Grid>
                     </Grid>
-                    <Divider />
+                    <Divider textAlign="left" sx={{ color: "black" }}>
+                        Invoice Details
+                    </Divider>
                     <Grid container direction="row" spacing={2}>
-                        {/* Reference Number and Date fields */}
+                        {/* Reference Number field */}
                         <Grid item>
                             <Grid
                                 container
@@ -570,29 +653,13 @@ export default function Invoices() {
                                 sx={{ width: "auto" }}
                             >
                                 {/* Reference Number field */}
-                                <TextField
+                                <SearchTextField
                                     margin="normal"
                                     InputLabelProps={{ shrink: true }}
-                                    label="Reference Number"
+                                    label="Invoice Reference Number"
                                     value={
                                         invoice.reference_number
                                             ? invoice.reference_number
-                                            : ""
-                                    }
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
-                                />
-                                {/* Date field */}
-                                <TextField
-                                    margin="normal"
-                                    InputLabelProps={{ shrink: true }}
-                                    label="Date"
-                                    value={
-                                        invoice.created
-                                            ? new Date(
-                                                  invoice.created
-                                              ).toDateString()
                                             : ""
                                     }
                                     InputProps={{
@@ -609,13 +676,38 @@ export default function Invoices() {
                                 sx={{ width: "auto" }}
                             >
                                 {/* Invoice Number field */}
-                                <TextField
+                                <SearchTextField
                                     margin="normal"
                                     InputLabelProps={{ shrink: true }}
                                     label="Invoice Number"
                                     value={
                                         invoice.invoice_number
                                             ? invoice.invoice_number
+                                            : ""
+                                    }
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
+                        {/* Date field */}
+                        <Grid item>
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Date field */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Invoice Date"
+                                    value={
+                                        invoice.created
+                                            ? new Date(
+                                                  invoice.created
+                                              ).toDateString()
                                             : ""
                                     }
                                     InputProps={{
@@ -631,88 +723,15 @@ export default function Invoices() {
                                 direction="column"
                                 sx={{ width: "auto" }}
                             >
-                                {/* Salesperson Username */}
-                                <SearchTextField
-                                    label="Salesperson Username"
-                                    value={salespersonUsernameField}
-                                    onSearchButtonClick={() => {
-                                        setSalespersonModalOpen(true);
-                                    }}
-                                    onChange={(event) => {
-                                        setSalespersonUsernameField(
-                                            event.target.value
-                                        );
-                                    }}
-                                    onKeyUp={(event) => {
-                                        if (
-                                            salespersonUsernameField &&
-                                            modifying &&
-                                            event.key === "Enter"
-                                        ) {
-                                            setUser(salespersonUsernameField);
-                                        }
-                                    }}
-                                    InputProps={{
-                                        readOnly: !modifying,
-                                    }}
-                                />
                                 {/* Salesperson */}
                                 <TextField
                                     margin="normal"
                                     InputLabelProps={{ shrink: true }}
-                                    label="Salesperson"
+                                    label="Invoice Salesperson"
                                     value={
-                                        user?.first_name && user?.last_name
-                                            ? `${user.first_name} ${user.last_name}`
-                                            : ""
-                                    }
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
-                                    sx={{ width: "100%" }}
-                                />
-                            </Grid>
-                        </Grid>
-                        {/* Customer Number and Customer Level fields */}
-                        <Grid item>
-                            <Grid
-                                container
-                                direction="column"
-                                sx={{ width: "auto" }}
-                            >
-                                {/* Customer Number field */}
-                                <SearchTextField
-                                    label="Customer Number"
-                                    value={customerNumberField}
-                                    onSearchButtonClick={() => {
-                                        setCustomerModalOpen(true);
-                                    }}
-                                    onChange={(event) => {
-                                        setCustomerNumberField(
-                                            event.target.value.toUpperCase()
-                                        );
-                                    }}
-                                    onKeyUp={(event) => {
-                                        if (
-                                            customerNumberField &&
-                                            modifying &&
-                                            event.key === "Enter"
-                                        ) {
-                                            setCustomer(customerNumberField);
-                                        }
-                                    }}
-                                    InputProps={{
-                                        readOnly: !modifying,
-                                    }}
-                                />
-                                {/* Customer Level field */}
-                                <TextField
-                                    margin="normal"
-                                    InputLabelProps={{ shrink: true }}
-                                    label="Customer Level"
-                                    value={
-                                        customer?.customer_level
-                                            ? customer?.customer_level
+                                        invoiceUser?.first_name ||
+                                        invoiceUser?.last_name
+                                            ? `${invoiceUser.first_name} ${invoiceUser.last_name}`
                                             : ""
                                     }
                                     InputProps={{
@@ -739,14 +758,28 @@ export default function Invoices() {
                                         readOnly: true,
                                     }}
                                 />
-                                {/* Customer Telephone Number field */}
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                    <Divider textAlign="left" sx={{ color: "black" }}>
+                        Credit Note Details
+                    </Divider>
+                    <Grid container direction="row" spacing={2}>
+                        {/* Reference Number field */}
+                        <Grid item>
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Reference Number field */}
                                 <TextField
                                     margin="normal"
                                     InputLabelProps={{ shrink: true }}
-                                    label="Telephone Number"
+                                    label="Reference Number"
                                     value={
-                                        customer?.telephone_number
-                                            ? customer?.telephone_number
+                                        creditNote.reference_number
+                                            ? creditNote.reference_number
                                             : ""
                                     }
                                     InputProps={{
@@ -755,25 +788,74 @@ export default function Invoices() {
                                 />
                             </Grid>
                         </Grid>
-                        {/* Customer Physical Address field */}
+                        {/* Date field */}
                         <Grid item>
-                            <TextField
-                                margin="normal"
-                                InputLabelProps={{ shrink: true }}
-                                label="Physical Address"
-                                value={
-                                    customer?.physical_address
-                                        ? customer?.physical_address
-                                        : ""
-                                }
-                                multiline
-                                InputProps={{
-                                    style: {
-                                        height: "135px",
-                                    },
-                                    readOnly: true,
-                                }}
-                            />
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Date field */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Date"
+                                    value={
+                                        creditNote.created
+                                            ? new Date(
+                                                  creditNote.created
+                                              ).toDateString()
+                                            : ""
+                                    }
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
+                        {/* Credit Note Number field */}
+                        <Grid item>
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Credit Note Number */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Credit Note Number"
+                                    value={creditNote.credit_number}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                    sx={{ width: "100%" }}
+                                />
+                            </Grid>
+                        </Grid>
+                        {/* Salesperson field */}
+                        <Grid item>
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{ width: "auto" }}
+                            >
+                                {/* Salesperson */}
+                                <TextField
+                                    margin="normal"
+                                    InputLabelProps={{ shrink: true }}
+                                    label="Salesperson"
+                                    value={
+                                        user?.first_name && user?.last_name
+                                            ? `${user.first_name} ${user.last_name}`
+                                            : ""
+                                    }
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                    sx={{ width: "100%" }}
+                                />
+                            </Grid>
                         </Grid>
                     </Grid>
 
@@ -781,10 +863,10 @@ export default function Invoices() {
                         <SingleClickDataGrid
                             hideFooter
                             columns={quotationColumns}
-                            rows={invoice?.items || []}
+                            rows={creditNote?.items || []}
                             selectionModel={selectionModel}
                             selectionModelChange={async (newSelection) => {
-                                var selectedIndex = invoice.items?.findIndex(
+                                var selectedIndex = creditNote.items?.findIndex(
                                     (item) => item.id === newSelection[0]
                                 );
                                 selectedIndex = Math.max(
@@ -794,8 +876,8 @@ export default function Invoices() {
                                 setSelectedIndex(selectedIndex);
 
                                 setSelectionModel(
-                                    invoice.items
-                                        ? invoice.items[selectedIndex].id
+                                    creditNote.items
+                                        ? creditNote.items[selectedIndex].id
                                         : []
                                 );
                             }}
@@ -808,72 +890,50 @@ export default function Invoices() {
                                         ? oldRow.quantity
                                         : newRow.quantity;
                                     if (newRow.product !== oldRow.product) {
-                                        try {
-                                            const product_details =
-                                                await getProductDetails(
-                                                    newRow.product
-                                                )
-                                                    .then((res) => res.data)
-                                                    .catch(() => {
-                                                        setAlertMessage(
-                                                            `Could not retrieve product data for ${newRow.product}.`
-                                                        );
-                                                        setAlertSeverity(
-                                                            "error"
-                                                        );
-                                                        setAlertVisibility(
-                                                            true
-                                                        );
-                                                    });
-                                            const priceObject =
-                                                product_details.prices.filter(
-                                                    (price: ProductPrice) =>
-                                                        price.level ==
-                                                        customer?.customer_level
-                                                );
-                                            if (priceObject.length > 1) {
-                                                throw new Error(
-                                                    "More than 1 price."
-                                                );
+                                        if (newRow.product in items) {
+                                            const _item = items[newRow.product];
+                                            if (
+                                                newRow.quantity > _item.quantity
+                                            ) {
+                                                return oldRow;
                                             }
-                                            const price = Number(
-                                                priceObject[0].price
-                                            );
-                                            let subtotal = price * quantity;
-                                            const vat = subtotal * 0.15;
-                                            subtotal += vat;
-                                            const updatedRow = {
+                                            return {
                                                 ...newRow,
-                                                description: `${product_details.description} ${product_details.model} ${product_details.year}`,
-                                                price: price,
-                                                quantity: Number(quantity),
-                                                vat: vat.toFixed(2),
-                                                subtotal: subtotal.toFixed(2),
+                                                description: _item.description,
+                                                price: Number(
+                                                    _item.price.toFixed(2)
+                                                ),
                                             };
-                                            setInvoice((prev): Invoice => {
-                                                const items = prev.items?.map(
-                                                    (row) =>
-                                                        row.id === newRow.id
-                                                            ? updatedRow
-                                                            : row
-                                                );
-                                                const totals =
-                                                    calculateTotals(items);
-                                                return {
-                                                    ...prev,
-                                                    // product: product
-                                                    items: items,
-                                                    ...totals,
-                                                };
-                                            });
-                                            return updatedRow;
-                                        } catch {
+                                        } else {
+                                            setAlertMessage(
+                                                `${newRow.product} was not found in invoice ${invoice.reference_number}.`
+                                            );
+                                            setAlertSeverity("error");
+                                            setAlertVisibility(true);
                                             return oldRow;
                                         }
                                     } else {
+                                        const _item = items[newRow.product];
+                                        if (newRow.quantity > _item.quantity) {
+                                            setAlertMessage(
+                                                `Too many ${newRow.product} (${quantity}) is being credited.`
+                                            );
+                                            setAlertSeverity("error");
+                                            setAlertVisibility(true);
+                                            return oldRow;
+                                        }
                                         const price = isNaN(newRow.price)
                                             ? Number(oldRow.price)
                                             : Number(newRow.price);
+
+                                        if (newRow.price > _item.price) {
+                                            setAlertMessage(
+                                                `The price of ${newRow.product} (R${price}) is exceeds max invoice price (R${_item.price}).`
+                                            );
+                                            setAlertSeverity("error");
+                                            setAlertVisibility(true);
+                                            return oldRow;
+                                        }
                                         let subtotal = price * quantity;
                                         const vat = subtotal * 0.15;
                                         subtotal += vat;
@@ -884,7 +944,7 @@ export default function Invoices() {
                                             vat: vat.toFixed(2),
                                             subtotal: subtotal.toFixed(2),
                                         };
-                                        setInvoice((prev) => {
+                                        setCreditNote((prev) => {
                                             const items = prev.items?.map(
                                                 (row) =>
                                                     row.id === newRow.id
@@ -922,23 +982,25 @@ export default function Invoices() {
                                         disabled={!modifying}
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            setInvoice((prev): Invoice => {
-                                                return {
-                                                    ...prev,
-                                                    items: [
-                                                        ...prev.items,
-                                                        {
-                                                            id: crypto.randomUUID(),
-                                                            product: "",
-                                                            quantity: 0,
-                                                            price: 0.0,
-                                                            vat: 0.0,
-                                                            subtotal: 0.0,
-                                                            description: "",
-                                                        },
-                                                    ],
-                                                };
-                                            });
+                                            setCreditNote(
+                                                (prev): CreditNote => {
+                                                    return {
+                                                        ...prev,
+                                                        items: [
+                                                            ...prev.items,
+                                                            {
+                                                                id: crypto.randomUUID(),
+                                                                product: "",
+                                                                quantity: 0,
+                                                                price: 0.0,
+                                                                vat: 0.0,
+                                                                subtotal: 0.0,
+                                                                description: "",
+                                                            },
+                                                        ],
+                                                    };
+                                                }
+                                            );
                                         }}
                                     >
                                         Add Item
@@ -950,38 +1012,40 @@ export default function Invoices() {
                                         disabled={!modifying}
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            setInvoice((prev): Invoice => {
-                                                const index = Math.max(
-                                                    prev.items.findIndex(
-                                                        (obj) =>
-                                                            obj.id ===
-                                                            selectionModel
-                                                    ),
-                                                    0
-                                                );
+                                            setCreditNote(
+                                                (prev): CreditNote => {
+                                                    const index = Math.max(
+                                                        prev.items.findIndex(
+                                                            (obj) =>
+                                                                obj.id ===
+                                                                selectionModel
+                                                        ),
+                                                        0
+                                                    );
 
-                                                return {
-                                                    ...prev,
-                                                    items: [
-                                                        ...prev.items.slice(
-                                                            0,
-                                                            index
-                                                        ),
-                                                        {
-                                                            id: crypto.randomUUID(),
-                                                            price: 0,
-                                                            vat: 0,
-                                                            subtotal: 0,
-                                                            quantity: 0,
-                                                            product: "",
-                                                            description: "",
-                                                        },
-                                                        ...prev.items.slice(
-                                                            index
-                                                        ),
-                                                    ],
-                                                };
-                                            });
+                                                    return {
+                                                        ...prev,
+                                                        items: [
+                                                            ...prev.items.slice(
+                                                                0,
+                                                                index
+                                                            ),
+                                                            {
+                                                                id: crypto.randomUUID(),
+                                                                price: 0,
+                                                                vat: 0,
+                                                                subtotal: 0,
+                                                                quantity: 0,
+                                                                product: "",
+                                                                description: "",
+                                                            },
+                                                            ...prev.items.slice(
+                                                                index
+                                                            ),
+                                                        ],
+                                                    };
+                                                }
+                                            );
                                         }}
                                     >
                                         Insert Item
@@ -997,7 +1061,7 @@ export default function Invoices() {
                                         onClick={async (e) => {
                                             e.preventDefault();
                                             if (selectedIndex !== null) {
-                                                setInvoice((prev) => {
+                                                setCreditNote((prev) => {
                                                     const items =
                                                         prev.items?.filter(
                                                             (item, index) =>
@@ -1030,7 +1094,7 @@ export default function Invoices() {
                             >
                                 <Grid item>
                                     <TextField
-                                        value={invoice?.amount}
+                                        value={creditNote?.amount}
                                         label="Amount"
                                         InputProps={{
                                             readOnly: true,
@@ -1048,7 +1112,7 @@ export default function Invoices() {
                                 </Grid>
                                 <Grid item>
                                     <TextField
-                                        value={invoice?.vat}
+                                        value={creditNote?.vat}
                                         label="VAT"
                                         InputProps={{
                                             readOnly: true,
@@ -1066,7 +1130,7 @@ export default function Invoices() {
                                 </Grid>
                                 <Grid item>
                                     <TextField
-                                        value={invoice?.total}
+                                        value={creditNote?.total}
                                         label="Total"
                                         InputProps={{
                                             readOnly: true,

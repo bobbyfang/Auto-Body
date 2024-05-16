@@ -3,7 +3,10 @@ import { AlertContext } from "../contexts/alertContext";
 import { User } from "../components/common/User";
 import axios from "axios";
 
-export default function useUser() {
+export default function useUser(): [
+    user: User,
+    saveUser: (username: string) => void
+] {
     const { setAlertMessage, setAlertSeverity, setAlertVisibility } =
         useContext(AlertContext);
 
@@ -26,5 +29,5 @@ export default function useUser() {
         }
     };
 
-    return { user: user, setUser: saveUser };
+    return [user, saveUser];
 }
