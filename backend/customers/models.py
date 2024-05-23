@@ -34,7 +34,7 @@ class Customer(models.Model):
     memo = models.TextField(default="", blank=True)
 
     suspend = models.BooleanField(default=False)
-    suspend_date = models.DateField(default=None, null=True, blank=True)
+    suspend_date = models.DateTimeField(default="", null=True, blank=True)
 
     def __str__(self):
         return str(self.name)

@@ -5,11 +5,31 @@ from rest_framework_serializer_extensions.serializers import SerializerExtension
 
 
 class ContactPersonSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
-    id = serializers.IntegerField()
+    id = serializers.CharField()
 
     class Meta:
         model = ContactPerson
-        fields = ["id", "contact_name", "role", "email", "customer"]
+        fields = ["id", "contact_name", "role", "phone_number", "email"]
+
+    def create(self, validated_data, customer):
+        contact_person = ContactPerson.objects.create(
+            customer=customer, **validated_data
+        )
+
+        return contact_person
+
+    def update(self, instance, validated_data):
+        instance.contact_name = validated_data.get(
+            "contact_name", instance.contact_name
+        )
+        instance.role = validated_data.get("role", instance.role)
+        instance.phone_number = validated_data.get(
+            "phone_number", instance.phone_number
+        )
+        instance.email = validated_data("email", instance.email)
+        instance.save()
+
+        return instance
 
 
 class CustomerSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
@@ -35,6 +55,23 @@ class CustomerSerializer(SerializerExtensionsMixin, serializers.ModelSerializer)
         expandable_fields = {
             "contact_persons": {"serializer": ContactPersonSerializer, "many": True}
         }
+
+    def create(self, validated_data):
+        contact_persons = validated_data.pop("contact_persons")
+
+        customer = Customer.objects.create(**validated_data)
+
+        customer.contact_persons.set(
+            map(
+                lambda contact_person: ContactPersonSerializer().create(
+                    contact_person, customer
+                ),
+                contact_persons,
+            )
+        )
+
+        customer.save()
+        return customer
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get("name", instance.name)
@@ -72,31 +109,26 @@ class CustomerSerializer(SerializerExtensionsMixin, serializers.ModelSerializer)
             "suspend_date", instance.suspend_date
         )
         contact_persons = validated_data.pop("contact_persons")
+
         for contact_person in contact_persons:
-            contact_person_id = contact_person.get("id", None)
-            if contact_person_id:
-                contact_person_instance = ContactPerson.objects.get(
-                    id=contact_person_id
+            id = contact_person.get("id", None)
+            try:
+                id = int(id)
+                contact_person_instance = ContactPerson.objects.get(id=id)
+                ContactPersonSerializer().update(
+                    contact_person_instance, contact_person
                 )
-                if contact_person_instance:
-                    contact_person_instance.contact_name = contact_person.get(
-                        "contact_name", contact_person_instance.contact_name
-                    )
-                    contact_person_instance.role = contact_person.get(
-                        "role", contact_person_instance.contact_name
-                    )
-                    contact_person_instance.phone_number = contact_person.get(
-                        "phone_number", contact_person_instance.contact_name
-                    )
-                    contact_person_instance.email = contact_person.get(
-                        "email", contact_person_instance.contact_name
-                    )
-                    contact_person_instance.customer = instance
-            else:
-                contact_person_instance = ContactPerson.objects.create(
-                    defaults=contact_person
+            except (TypeError, ValueError, ContactPerson.DoesNotExist):
+                contact_person.pop("id")
+                contact_person_instance = ContactPersonSerializer().create(
+                    contact_person, customer=instance
                 )
-            contact_person_instance.save()
+                contact_person["id"] = contact_person_instance.id
+
+        contact_persons_ids = map(
+            lambda contact_person: contact_person.get("id"), contact_persons
+        )
+        instance.contact_persons.exclude(id__in=contact_persons_ids).delete()
 
         instance.save()
         return instance
