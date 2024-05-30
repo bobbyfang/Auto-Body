@@ -1,7 +1,7 @@
-Customer Table
------------------------------
-customer level//
-
 PurchaseOrder
 -----------------------------
 supplier on delete - check
+
+ProductsModal
+-----------------------------
+replace table with MUI datagrid
