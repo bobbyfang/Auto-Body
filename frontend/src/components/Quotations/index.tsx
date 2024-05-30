@@ -27,6 +27,7 @@ import useUser from "../../hooks/useUser";
 import TransferQuotationModal from "../TransferQuotationModal";
 import { ReferenceContext } from "../../contexts/referenceContext";
 import { ConfirmationContext } from "../../contexts/confirmationContext";
+import { Document, Page, PDFViewer, Text, View } from "@react-pdf/renderer";
 // import { ConfirmationContext } from "../../contexts/confirmationContext";
 
 export interface QuotationItem {
@@ -548,10 +549,8 @@ export default function Quotes() {
                                         <Button
                                             disabled={modifying}
                                             onClick={() => {
-                                                const h = () => {
-                                                    console.log("hello");
-                                                    throw new Error("bruh");
-                                                };
+                                                setConfirmationMessage(<></>);
+                                                const h = () => {};
                                                 setOnConfirm(() => {
                                                     return h;
                                                 });

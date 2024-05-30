@@ -27,6 +27,10 @@ import OrderSelectorModal from "../OrderSelectorModal";
 import useCustomer from "../../hooks/useCustomer";
 import useUser from "../../hooks/useUser";
 import { CreditNote } from "../CreditNotes";
+import { printPDF } from "../common/Print";
+import InvoicePDF from "../../pdfs/InvoicePDF";
+import { ConfirmationContext } from "../../contexts/confirmationContext";
+import { PDFViewer } from "@react-pdf/renderer";
 
 export interface InvoiceItem {
     id: number | string;
@@ -133,6 +137,9 @@ export default function Invoices() {
             headerName: "Subtotal",
         },
     ];
+
+    const { setConfirmationMessage, setConfirmationOpen, setOnConfirm } =
+        useContext(ConfirmationContext);
 
     const load_reference_numbers_list = (
         action: (res: AxiosResponse<any, any>) => any
@@ -552,7 +559,27 @@ export default function Invoices() {
                                 </Grid>
                                 {/* Print button */}
                                 <Grid item>
-                                    <Button disabled={modifying}>
+                                    <Button
+                                        disabled={modifying}
+                                        onClick={
+                                            () => {
+                                                setConfirmationMessage(
+                                                    <PDFViewer
+                                                        width="100%"
+                                                        height={700}
+                                                    >
+                                                        <InvoicePDF
+                                                            details={invoice}
+                                                        />
+                                                    </PDFViewer>
+                                                );
+                                                setConfirmationOpen(true);
+                                            }
+                                            // printPDF(
+                                            //     <InvoicePDF details={invoice} />
+                                            // )
+                                        }
+                                    >
                                         <Print />
                                         Print?
                                     </Button>
