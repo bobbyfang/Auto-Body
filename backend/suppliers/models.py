@@ -13,7 +13,10 @@ class Supplier(models.Model):
     fax_number = PhoneNumberField(default="", blank=True)
     mobile_number = PhoneNumberField(default="", blank=True)
     email = models.EmailField(default="", blank=True)
-    address = models.TextField(default="", blank=True)
+    physical_address = models.TextField(default="", blank=True)
+    billing_address = models.TextField(default="", blank=True)
+    vat_number = models.TextField(default="", blank=True)
+    company_key_number = models.TextField(default="", blank=True)
 
     memo = models.TextField(default="", blank=True)
 
