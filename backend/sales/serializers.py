@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework_serializer_extensions.serializers import SerializerExtensionsMixin
 
+from common.utils.product_description import product_description
 from customers.serializers import CustomerSerializer
 from users.serializers import UserSerializer
 from sales.models import (
@@ -14,10 +15,6 @@ from sales.models import (
     InvoiceItem,
 )
 from inventory.models import Product
-
-
-def product_description(obj):
-    return f"{obj.product.description} {obj.product.model} {obj.product.year}"
 
 
 class QuotationItemSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
